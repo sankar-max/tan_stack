@@ -1,0 +1,111 @@
+{
+  "users": [
+    {
+      "id": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr",
+      "name": "Shankar",
+      "email": "sankrvj18@gmail.com",
+      "email_verified": true,
+      "image": "https://avatars.githubusercontent.com/u/114487653?v=4",
+      "created_at": "2026-01-21 07:45:26.744",
+      "updated_at": "2026-01-21 07:45:26.744"
+    },
+    {
+      "id": "sUtJEDnMLst3OVTHhONKQ4Z3zeia2Bn2",
+      "name": "Sankar",
+      "email": "sankarvj18@gmail.com",
+      "email_verified": false,
+      "image": null,
+      "created_at": "2026-01-21 07:18:21.819",
+      "updated_at": "2026-01-21 07:18:21.819"
+    }
+  ],
+
+  "tags": [
+    { "name": "React", "slug": "react" },
+    { "name": "Next.js", "slug": "nextjs" },
+    { "name": "Databases", "slug": "databases" },
+    { "name": "TypeScript", "slug": "typescript" },
+    { "name": "Web Dev", "slug": "web-dev" }
+  ],
+
+  "posts": [
+    {
+      "title": "Getting Started with React",
+      "slug": "getting-started-with-react",
+      "content": "# React Basics\nLearn components, hooks, and state.",
+      "excerpt": "Learn the basics of React.",
+      "published": true,
+      "authorId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr"
+    },
+    {
+      "title": "Why Next.js is Powerful",
+      "slug": "why-nextjs-is-powerful",
+      "content": "# Next.js\nServer Components and App Router explained.",
+      "excerpt": "Next.js explained.",
+      "published": true,
+      "authorId": "sUtJEDnMLst3OVTHhONKQ4Z3zeia2Bn2"
+    },
+    {
+      "title": "Understanding Databases",
+      "slug": "understanding-databases",
+      "content": "# Databases\nSQL vs NoSQL explained.",
+      "excerpt": "SQL vs NoSQL.",
+      "published": true,
+      "authorId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr"
+    }
+  ],
+
+  "postTags": [
+    { "postId": 1, "tagId": 1 },
+    { "postId": 1, "tagId": 5 },
+    { "postId": 2, "tagId": 2 },
+    { "postId": 2, "tagId": 4 },
+    { "postId": 3, "tagId": 3 }
+  ],
+
+  "comments": [
+    {
+      "content": "Great article!",
+      "postId": 1,
+      "authorId": "sUtJEDnMLst3OVTHhONKQ4Z3zeia2Bn2",
+      "parentId": null,
+      "depth": 0
+    },
+    {
+      "content": "Thanks a lot 🙌",
+      "postId": 1,
+      "authorId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr",
+      "parentId": 1,
+      "depth": 1
+    },
+    {
+      "content": "Very helpful!",
+      "postId": 2,
+      "authorId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr",
+      "parentId": null,
+      "depth": 0
+    }
+  ],
+
+  "postLikes": [
+    {
+      "postId": 1,
+      "userId": "sUtJEDnMLst3OVTHhONKQ4Z3zeia2Bn2"
+    },
+    {
+      "postId": 2,
+      "userId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr"
+    }
+  ],
+
+  "follows": [
+    {
+      "followerId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr",
+      "followingId": "sUtJEDnMLst3OVTHhONKQ4Z3zeia2Bn2"
+    },
+    {
+      "followerId": "sUtJEDnMLst3OVTHhONKQ4Z3zeia2Bn2",
+      "followingId": "eBt7QnGKHrhiC3VRFsitIJOAlc190bUr"
+    }
+  ]
+}

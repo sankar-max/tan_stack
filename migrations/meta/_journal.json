@@ -8,6 +8,20 @@
       "when": 1768973346372,
       "tag": "0000_vengeful_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768994644483,
+      "tag": "0001_regular_sumo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768995209100,
+      "tag": "0002_oval_maginty",
+      "breakpoints": true
     }
   ]
 }

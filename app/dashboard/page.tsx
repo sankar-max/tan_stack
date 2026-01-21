@@ -7,8 +7,10 @@ import { ThemeDropdown } from "@/components/theme/theme-dropdown"
 import { Loader2, LogOutIcon } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import UserAvatar from "@/components/profile/avatar"
+import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
+  const router = useRouter()
   const { user, isPending } = useUserProfile()
 
   if (isPending)
@@ -18,6 +20,16 @@ export default function Dashboard() {
       </div>
     )
   if (!user) redirect("/sign-in")
+
+  const logout = () => {
+    signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in")
+        },
+      },
+    })
+  }
   return (
     <div className="p-8 space-y-4">
       <div className="flex items-center justify-between">
@@ -27,7 +39,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           {/* <ThemeToggle /> */}
           <ThemeDropdown />
-          <Button variant="outline" onClick={() => signOut()}>
+          <Button variant="outline" onClick={logout}>
             <LogOutIcon />
             Sign Out
           </Button>
