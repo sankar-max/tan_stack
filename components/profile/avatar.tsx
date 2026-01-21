@@ -1,9 +1,9 @@
 import React from "react"
-import { UserProfile } from "../user-profile"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import Image from "next/image"
 
 function UserAvatar() {
-  const { user } = UserProfile()
+  const { user } = useUserProfile()
   if (!user || !user.img || !user.name) return null
   return (
     <div className="relative w-10 h-10">

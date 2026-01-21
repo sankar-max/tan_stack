@@ -5,11 +5,11 @@ import { redirect } from "next/navigation"
 // import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { ThemeDropdown } from "@/components/theme/theme-dropdown"
 import { Loader2, LogOutIcon } from "lucide-react"
-import { UserProfile } from "@/components/user-profile"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import UserAvatar from "@/components/profile/avatar"
 
 export default function Dashboard() {
-  const { user, isPending } = UserProfile()
+  const { user, isPending } = useUserProfile()
 
   if (isPending)
     return (
