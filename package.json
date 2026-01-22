@@ -11,7 +11,8 @@
     "migrate": "npx @better-auth/cli migrate",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "build:error": "npx tsc --noEmit | awk '{print NR \". \" $0}' > ts-errors-indexed.txt"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
