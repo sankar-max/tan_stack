@@ -40,16 +40,6 @@ export async function GET(req: Request): Promise<ReturnType<typeof ok>> {
       limit,
       offset,
       orderBy,
-      columns: {
-        id: true,
-        title: true,
-        slug: true,
-        excerpt: true,
-        published: true,
-        authorId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
       with: {
         author: {
           columns: {

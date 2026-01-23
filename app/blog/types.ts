@@ -1,15 +1,13 @@
 import { db } from "@/db"
-import { ApiResponse } from "../api/lib/api-response"
+import { posts } from "@/db/schema"
 
-export type PostListItemsT = Awaited<
-  ReturnType<
-    typeof db.query.posts.findMany<{
-      with: {
-        author: { columns: { id: true; name: true; image: true } }
-      }
-    }>
-  >
->[number]
+export type PostListItemsT = typeof posts.$inferSelect & {
+  author: {
+    id: number
+    name: string
+    image: string
+  }
+}
 export type PostListResponse = {
   posts: PostListItemsT[]
   total: number
