@@ -5,6 +5,7 @@ import { ok, fail } from "../lib/response"
 // db
 import { db } from "@/db"
 import { posts } from "@/db/schema/blog.schema"
+import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, asc, eq } from "drizzle-orm"
 
 // schema
@@ -13,11 +14,7 @@ import { SearchQuerySchema } from "@/app/api/_utilities/schema/search-schema"
 import { parseSearchParams } from "@/app/api/_utilities/http/parse-search-params"
 
 export async function GET(req: Request): Promise<ReturnType<typeof ok>> {
-  const authResult = await requireUser(req)
-
-  if (authResult.error) {
-    return fail("Unauthorized", 401, "UNAUTHORIZED")
-  }
+  const requireAuth = await requireUser(req)
 
   const searchParams = parseSearchParams(req, SearchQuerySchema)
   if (!searchParams.success) {
@@ -35,21 +32,28 @@ export async function GET(req: Request): Promise<ReturnType<typeof ok>> {
   const orderBy = order === "asc" ? asc(posts[sort]) : desc(posts[sort])
 
   const [data, [{ total }]] = await Promise.all([
-    db.query.posts.findMany({
-      where,
-      limit,
-      offset,
-      orderBy,
-      with: {
+    db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        excerpt: posts.excerpt,
+        content: posts.content,
+        published: posts.published,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
         author: {
-          columns: {
-            id: true,
-            name: true,
-            image: true,
-          },
+          id: user.id,
+          name: user.name,
+          image: user.image,
         },
-      },
-    }),
+      })
+      .from(posts)
+      .leftJoin(user, eq(posts.authorId, user.id))
+      .where(where)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(orderBy),
     db
       .select({ total: sql<number>`count(*)` })
       .from(posts)
@@ -58,10 +62,10 @@ export async function GET(req: Request): Promise<ReturnType<typeof ok>> {
 
   return ok({
     posts: data,
-    total,
+    total: Number(total),
     page,
     limit,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.ceil(Number(total) / limit),
   })
 }
 

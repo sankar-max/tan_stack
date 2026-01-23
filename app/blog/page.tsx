@@ -7,7 +7,7 @@ import { postService } from "@/service/post"
 async function Blog() {
   const queryClient = new QueryClient()
   await queryClient.prefetchQuery({
-    queryKey: postKeys.publicLatest(12),
+    queryKey: [...postKeys.publicLatest(12), ""],
     queryFn: () => postService.getPosts({ limit: 12 }),
   })
   return (
