@@ -1,0 +1,7 @@
+export const POST_API_CONSTANTS = {
+  GET_POSTS: "/post",
+  GET_POST: (id: string) => `/post/${id}`,
+  CREATE_POST: "/post",
+  UPDATE_POST: (id: string) => `/post/${id}`,
+  DELETE_POST: (id: string) => `/post/${id}`,
+}

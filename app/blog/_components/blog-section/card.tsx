@@ -6,6 +6,7 @@ import { format } from "date-fns"
 import { ArrowRight } from "lucide-react"
 import { motion, Variants } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PostListItemsT } from "../../types"
 
 const item: Variants = {
   hidden: { opacity: 0, y: 15, scale: 0.98 },
@@ -21,18 +22,8 @@ const item: Variants = {
   },
 }
 
-interface Post {
-  id: number
-  title: string
-  slug: string
-  excerpt: string | null
-  createdAt: Date
-  authorName: string | null
-  authorImage: string | null
-}
-
 interface CardProps {
-  post: Post
+  post: PostListItemsT
 }
 
 export function Card({ post }: CardProps) {
@@ -47,13 +38,13 @@ export function Card({ post }: CardProps) {
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6 ring-1 ring-border/50">
-                  <AvatarImage src={post.authorImage ?? undefined} />
+                  <AvatarImage src={post.author.image ?? undefined} />
                   <AvatarFallback className="text-[10px]">
-                    {post.authorName?.[0]}
+                    {post.author.name?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-xs font-medium text-muted-foreground">
-                  {post.authorName}
+                  {post.author.name}
                 </span>
               </div>
               <span className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">

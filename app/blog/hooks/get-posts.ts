@@ -1,13 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { getPublicPosts } from "../_actions";
-import { postKeys } from "../lib/post-key";
-type getPublishPost = Awaited<ReturnType<typeof getPublicPosts>>
-export const usePublicPosts = () => {
- const { data, isLoading, error } = useQuery<getPublishPost>({
-  queryKey: postKeys.publicLatest(12),
-  queryFn: () => getPublicPosts(12),
-  staleTime: 1000 * 60 * 5, // 5 min – adjust as needed
- });
+import { useQuery } from "@tanstack/react-query"
+import { postService } from "@/service/post"
+import { postKeys } from "../lib/post-key"
+export const usePublicPosts = (search?: string) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: [...postKeys.publicLatest(12), search],
+    queryFn: () => postService.getPosts({ search, limit: 12 }),
+  })
 
- return { data, isLoading, error };
-};
+  return { data, isLoading, error }
+}

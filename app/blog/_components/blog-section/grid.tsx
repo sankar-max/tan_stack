@@ -16,27 +16,25 @@ const container = {
   },
 }
 
-interface Post {
-  id: number
-  title: string
-  slug: string
-  excerpt: string | null
-  createdAt: Date
-  authorName: string | null
-  authorImage: string | null
-}
+import { PostListItemsT } from "../../types"
 
 interface GridProps {
   isLoading: boolean
   error: Error | null
-  posts: Post[]
+  posts: PostListItemsT[]
   status?: string
   errorMessage?: string
 }
 
-export function Grid({ isLoading, error, posts, status, errorMessage }: GridProps) {
+export function Grid({
+  isLoading,
+  error,
+  posts = [],
+  status,
+  errorMessage,
+}: GridProps) {
   return (
-    <div className="w-full">
+    <div key={posts.length} className="w-full">
       <AnimatePresence mode="wait">
         {isLoading ? (
           <motion.div
@@ -46,7 +44,9 @@ export function Grid({ isLoading, error, posts, status, errorMessage }: GridProp
             className="flex flex-col items-center py-20"
           >
             <Loader2 className="h-8 w-8 animate-spin text-primary/50 mb-4" />
-            <p className="text-muted-foreground font-medium">Fetching content...</p>
+            <p className="text-muted-foreground font-medium">
+              Fetching content...
+            </p>
           </motion.div>
         ) : error || status === "error" ? (
           <motion.div
@@ -57,7 +57,9 @@ export function Grid({ isLoading, error, posts, status, errorMessage }: GridProp
             <div className="bg-destructive/10 p-4 rounded-full mb-4">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <p className="text-foreground font-medium mb-1">Could not load posts</p>
+            <p className="text-foreground font-medium mb-1">
+              Could not load posts
+            </p>
             <p className="text-muted-foreground text-sm">
               {error?.message || errorMessage}
             </p>
@@ -68,8 +70,12 @@ export function Grid({ isLoading, error, posts, status, errorMessage }: GridProp
             animate={{ opacity: 1 }}
             className="text-center py-32"
           >
-            <p className="text-xl text-muted-foreground font-medium">No stories found.</p>
-            <p className="text-sm text-muted-foreground/60 mt-2">Try a different keyword.</p>
+            <p className="text-xl text-muted-foreground font-medium">
+              No stories found.
+            </p>
+            <p className="text-sm text-muted-foreground/60 mt-2">
+              Try a different keyword.
+            </p>
           </motion.div>
         ) : (
           <motion.div
