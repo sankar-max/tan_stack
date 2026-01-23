@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/lib/theme/provider"
 import { Toaster } from "@/components/ui/sonner"
 
 import { siteConfig } from "@/lib/config"
+import { ReactQueryProvider } from "@/lib/react-query/React-query-provider"
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -36,8 +37,10 @@ export default function RootLayout({
         className={`${plusJakarta.variable} ${jbMono.variable} antialiased`}
       >
         <ThemeProvider>
-          {children}
-          <Toaster />
+          <ReactQueryProvider>
+            {children}
+            <Toaster />
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>

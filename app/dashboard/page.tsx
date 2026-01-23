@@ -21,8 +21,8 @@ export default function Dashboard() {
     )
   if (!user) redirect("/sign-in")
 
-  const logout = () => {
-    signOut({
+  const logout = async () => {
+    await signOut({
       fetchOptions: {
         onSuccess: () => {
           router.push("/sign-in")
