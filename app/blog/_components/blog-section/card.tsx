@@ -29,7 +29,7 @@ interface CardProps {
 export function Card({ post }: CardProps) {
   return (
     <motion.div variants={item}>
-      <Link href={`/blog/${post.slug}`} className="group block h-full">
+      <Link href={`/blog/${post.id}`} className="group block h-full">
         <article className="flex flex-col h-full bg-card rounded-2xl border border-border/40 hover:border-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 overflow-hidden relative">
           {/* Gradient Overlay on Hover */}
           <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
