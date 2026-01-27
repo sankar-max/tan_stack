@@ -3,7 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Heart, MessageCircle } from "lucide-react"
 import { motion, Variants } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostListItemsT } from "../../types"
@@ -60,9 +60,28 @@ export function Card({ post }: CardProps) {
               {post.excerpt}
             </p>
 
-            <div className="flex items-center text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">
-              Read Story{" "}
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <div className="flex items-center gap-4 mt-auto">
+              <div
+                className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                  post.isLiked
+                    ? "text-red-500"
+                    : "text-muted-foreground group-hover:text-primary/80"
+                }`}
+              >
+                <Heart
+                  className={`w-3.5 h-3.5 ${
+                    post.isLiked ? "fill-current" : ""
+                  }`}
+                />
+                <span>{post.totalLikes}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground group-hover:text-primary/80 transition-colors">
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>{post.totalComments}</span>
+              </div>
+              <div className="flex items-center text-xs font-medium text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+                Read Story <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </div>
             </div>
           </div>
         </article>

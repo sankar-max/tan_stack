@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm"
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core"
-import { posts, comments } from "./blog.schema"
+import { posts, comments, bookmarks, commentLikes } from "./blog.schema"
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -73,7 +73,27 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 )
 
+export const userProfile = pgTable("user_profile", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  bio: text("bio"),
+  website: text("website"),
+  location: text("location"),
+  isPrivate: boolean("is_private").default(false).notNull(),
+  metadata: text("metadata").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+})
+
 /* -------- RELATIONS -------- */
+
+export const userProfileRelations = relations(userProfile, ({ one }) => ({
+  user: one(user, { fields: [userProfile.userId], references: [user.id] }),
+}))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, { fields: [session.userId], references: [user.id] }),
@@ -83,9 +103,12 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }))
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
   posts: many(posts),
   comments: many(comments),
+  profile: one(userProfile),
+  bookmarks: many(bookmarks),
+  commentLikes: many(commentLikes),
 }))

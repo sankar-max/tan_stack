@@ -14,3 +14,11 @@ export async function requireUser(req: Request) {
 
   return { user: session.user }
 }
+
+export async function getCurrentUser(req: Request) {
+  const session = await auth.api.getSession({
+    headers: req.headers,
+  })
+
+  return session?.user || null
+}
