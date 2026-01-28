@@ -14,9 +14,6 @@ import { SearchQuerySchema } from "@/app/api/_utilities/schema/search-schema"
 import { parseSearchParams } from "@/app/api/_utilities/http/parse-search-params"
 
 export async function GET(req: Request) {
-  const sessionUser = await getCurrentUser(req)
-  const userId = sessionUser?.id
-
   const searchParams = parseSearchParams(req, SearchQuerySchema)
   if (!searchParams.success) {
     return zodError(searchParams.error)
@@ -32,7 +29,10 @@ export async function GET(req: Request) {
 
   const orderBy = order === "asc" ? asc(posts[sort]) : desc(posts[sort])
 
-  const [data, [{ total }]] = await Promise.all([
+  // Parallel execution of Auth, Posts (content/author), and Total Count
+  // This starts the DB thinking immediately, even if Auth is hit by a cold start.
+  const [sessionUser, data, totalResult] = await Promise.all([
+    getCurrentUser(req),
     db
       .select({
         id: posts.id,
@@ -50,9 +50,6 @@ export async function GET(req: Request) {
         },
         totalLikes: sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(Number),
         totalComments: sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(Number),
-        isLiked: userId
-          ? sql<boolean>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId}) > 0`
-          : sql<boolean>`false`,
       })
       .from(posts)
       .leftJoin(user, eq(posts.authorId, user.id))
@@ -66,8 +63,27 @@ export async function GET(req: Request) {
       .where(where),
   ])
 
+  const total = totalResult[0]?.total || 0
+  const postIds = data.map((p) => p.id)
+
+  // Step 2: Supplement with user-specific "isLiked" status if logged in
+  let likedSet = new Set<number>()
+  if (sessionUser && postIds.length > 0) {
+    const userLikes = await db
+      .select({ postId: postLikes.postId })
+      .from(postLikes)
+      .where(and(eq(postLikes.userId, sessionUser.id), sql`${postLikes.postId} IN ${postIds}`))
+
+    likedSet = new Set(userLikes.map((ul) => ul.postId))
+  }
+
+  const postsWithMetadata = data.map((post) => ({
+    ...post,
+    isLiked: likedSet.has(post.id),
+  }))
+
   return ok({
-    posts: data,
+    posts: postsWithMetadata,
     total: Number(total),
     page,
     limit,
