@@ -38,6 +38,7 @@ export const posts = pgTable(
     index("posts_author_idx").on(table.authorId),
     index("posts_published_idx").on(table.published),
     index("posts_updated_idx").on(table.updatedAt),
+    index("posts_id_idx").on(table.id),
   ]
 )
 
@@ -145,4 +146,49 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
 
 export const tagsRelations = relations(tags, ({ many }) => ({
   posts: many(postTags),
+}))
+
+/* ---------------- BOOKMARKS ---------------- */
+
+export const bookmarks = pgTable(
+  "bookmarks",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    postId: integer("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.postId] })]
+)
+
+export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
+  user: one(user, { fields: [bookmarks.userId], references: [user.id] }),
+  post: one(posts, { fields: [bookmarks.postId], references: [posts.id] }),
+}))
+
+/* ---------------- COMMENT LIKES ---------------- */
+
+export const commentLikes = pgTable(
+  "comment_likes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    commentId: integer("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.commentId] })]
+)
+
+export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
+  user: one(user, { fields: [commentLikes.userId], references: [user.id] }),
+  comment: one(comments, {
+    fields: [commentLikes.commentId],
+    references: [comments.id],
+  }),
 }))

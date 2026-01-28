@@ -1,10 +1,10 @@
-import { requireUser } from "@/lib/requireAuth"
+import { requireUser, getCurrentUser } from "@/lib/requireAuth"
 import { zodError } from "../lib/zod-error"
 import { ok, fail } from "../lib/response"
 
 // db
 import { db } from "@/db"
-import { posts } from "@/db/schema/blog.schema"
+import { comments, postLikes, posts } from "@/db/schema/blog.schema"
 import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, asc, eq } from "drizzle-orm"
 
@@ -13,8 +13,9 @@ import { CreatePostSchema } from "./schema"
 import { SearchQuerySchema } from "@/app/api/_utilities/schema/search-schema"
 import { parseSearchParams } from "@/app/api/_utilities/http/parse-search-params"
 
-export async function GET(req: Request): Promise<ReturnType<typeof ok>> {
-  const requireAuth = await requireUser(req)
+export async function GET(req: Request) {
+  const sessionUser = await getCurrentUser(req)
+  const userId = sessionUser?.id
 
   const searchParams = parseSearchParams(req, SearchQuerySchema)
   if (!searchParams.success) {
@@ -47,6 +48,11 @@ export async function GET(req: Request): Promise<ReturnType<typeof ok>> {
           name: user.name,
           image: user.image,
         },
+        totalLikes: sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(Number),
+        totalComments: sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(Number),
+        isLiked: userId
+          ? sql<boolean>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId}) > 0`
+          : sql<boolean>`false`,
       })
       .from(posts)
       .leftJoin(user, eq(posts.authorId, user.id))
