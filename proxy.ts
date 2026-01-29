@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSessionCookie } from "better-auth/cookies"
 import { authConfig } from "./lib/config"
+import { auth } from "./lib/auth"
+import { authClient } from "./lib/auth-client"
 
 export async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request)
   const pathname = request.nextUrl.pathname
 
-  const isAuthPage = pathname.startsWith(authConfig.signInUrl) || 
-                     pathname.startsWith(authConfig.signUpUrl)
-  
   const isDashboardPage = pathname.startsWith(authConfig.callbackUrl)
 
   if (!sessionCookie) {
@@ -20,17 +19,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (isAuthPage) {
-    return NextResponse.redirect(new URL(authConfig.callbackUrl, request.url))
-  }
-
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/sign-in",
-    "/sign-up",
-  ],
+  matcher: ["/dashboard/:path*", "/sign-in", "/sign-up"],
 }

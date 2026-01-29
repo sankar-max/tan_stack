@@ -1,7 +1,7 @@
 "use client"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/auth-client"
-import { redirect } from "next/navigation"
 // import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { ThemeDropdown } from "@/components/theme/theme-dropdown"
 import { Loader2, LogOutIcon } from "lucide-react"
@@ -13,13 +13,26 @@ export default function Dashboard() {
   const router = useRouter()
   const { user, isPending } = useUserProfile()
 
+  useEffect(() => {
+    if (!isPending && !user) {
+      void signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/sign-in")
+          },
+        },
+      })
+    }
+  }, [isPending, user, router])
+
   if (isPending)
     return (
       <div className="grid place-items-center h-screen">
         <Loader2 className="animate-spin" size={29} />
       </div>
     )
-  if (!user) redirect("/sign-in")
+
+  if (!user) return null
 
   const logout = async () => {
     await signOut({

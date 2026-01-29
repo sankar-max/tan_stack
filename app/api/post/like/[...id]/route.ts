@@ -13,7 +13,7 @@ type PostLikeParams = {
  }>;
 };
 
-export default async function GET(
+export async function GET(
  req: NextRequest,
  { params }: PostLikeParams
 ) {
