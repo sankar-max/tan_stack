@@ -4,4 +4,5 @@ export const POST_API_CONSTANTS = {
   CREATE_POST: "/post",
   UPDATE_POST: (id: string) => `/post/${id}`,
   DELETE_POST: (id: string) => `/post/${id}`,
+  LIKE_POST: "/post/like",
 }
