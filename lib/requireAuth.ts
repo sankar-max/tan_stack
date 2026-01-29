@@ -16,6 +16,14 @@ export async function requireUser(req: Request) {
 }
 
 export async function getCurrentUser(req: Request) {
+  const cookie = req.headers.get("cookie")
+  const authHeader = req.headers.get("authorization")
+
+  // Short-circuit: If no better-auth cookie or Authorization header, skip DB check
+  if (!cookie?.includes("better-auth.session_token") && !authHeader) {
+    return null
+  }
+
   const session = await auth.api.getSession({
     headers: req.headers,
   })
