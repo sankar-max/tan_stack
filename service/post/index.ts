@@ -17,6 +17,13 @@ class PostService {
   async getPost(id: string) {
     return api.get<PostListItemsT>(POST_API_CONSTANTS.GET_POST(id))
   }
+
+  async toggleLike(postId: string | number) {
+    return api.post<{ liked: boolean; totalLikes: number }>(
+      POST_API_CONSTANTS.LIKE_POST,
+      { postId: postId.toString() }
+    )
+  }
 }
 
 export const postService = new PostService()

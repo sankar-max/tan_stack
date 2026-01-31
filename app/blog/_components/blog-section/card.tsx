@@ -7,6 +7,7 @@ import { ArrowRight, Heart, MessageCircle } from "lucide-react"
 import { motion, Variants } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostListItemsT } from "../../types"
+import { useToggleLike } from "../../hooks/use-toggle-like"
 
 const item: Variants = {
   hidden: { opacity: 0, y: 15, scale: 0.98 },
@@ -27,6 +28,15 @@ interface CardProps {
 }
 
 export function Card({ post }: CardProps) {
+  const { mutate: toggleLike, isPending } = useToggleLike()
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isPending) return
+    toggleLike(post.id)
+  }
+
   return (
     <motion.div variants={item}>
       <Link href={`/blog/${post.id}`} className="group block h-full">
@@ -62,15 +72,18 @@ export function Card({ post }: CardProps) {
 
             <div className="flex items-center gap-4 mt-auto">
               <div
-                className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                onClick={handleLike}
+                className={`flex items-center gap-1.5 text-xs font-medium transition-all duration-300 cursor-pointer hover:scale-110 active:scale-95 ${
                   post.isLiked
                     ? "text-red-500"
-                    : "text-muted-foreground group-hover:text-primary/80"
-                }`}
+                    : "text-muted-foreground hover:text-red-400"
+                } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <Heart
-                  className={`w-3.5 h-3.5 ${
-                    post.isLiked ? "fill-current" : ""
+                  className={`w-3.5 h-3.5 transition-all duration-300 ${
+                    post.isLiked
+                      ? "fill-current scale-110"
+                      : "group-hover:scale-110"
                   }`}
                 />
                 <span>{post.totalLikes}</span>

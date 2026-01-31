@@ -10,14 +10,14 @@ async function Blog() {
   const reqHeaders = await headers()
   const cookie = reqHeaders.get("cookie")
 
-  // await queryClient.prefetchQuery({
-  //   queryKey: [...postKeys.publicLatest(12), ""],
-  //   queryFn: () =>
-  //     postService.getPosts(
-  //       { limit: 12 },
-  //       { headers: { Cookie: cookie ?? "" } },
-  //     ),
-  // })
+  await queryClient.prefetchQuery({
+    queryKey: [...postKeys.publicLatest(12), ""],
+    queryFn: () =>
+      postService.getPosts(
+        { limit: 12 },
+        { headers: { Cookie: cookie ?? "" } },
+      ),
+  })
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <BlogSection />
