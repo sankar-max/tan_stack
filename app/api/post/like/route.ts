@@ -5,7 +5,7 @@ import { ok, fail } from "../../lib/response"
 // db
 import { db } from "@/db"
 import { postLikes, posts } from "@/db/schema/blog.schema"
-import { and, eq, sql } from "drizzle-orm"
+import { sql } from "drizzle-orm"
 
 // schema
 import { LikePostSchema } from "./schema"
@@ -18,68 +18,87 @@ import { LikePostSchema } from "./schema"
  * - Returns updated count to prevent extra client-side fetches.
  */
 export async function POST(req: Request) {
- const authResult = await requireUser(req)
- if (authResult.error) {
-  return fail("Unauthorized", 401, "UNAUTHORIZED")
- }
-
- try {
-  const body = await req.json()
-  const result = LikePostSchema.safeParse(body)
-
-  if (!result.success) {
-   return zodError(result.error)
+  const authResult = await requireUser(req)
+  if (authResult.error) {
+    return fail("Unauthorized", 401, "UNAUTHORIZED")
   }
 
-  const { postId: rawPostId } = result.data
-  const postId = Number(rawPostId)
-  const userId = authResult.user.id
+  try {
+    const body = await req.json()
+    const result = LikePostSchema.safeParse(body)
 
-  // Check if post exists & current like status in parallel
-  // Selecting only minimal columns to reduce overhead
-  const [post, existingLike] = await Promise.all([
-   db.query.posts.findFirst({
-    where: eq(posts.id, postId),
-    columns: { id: true },
-   }),
-   db.query.postLikes.findFirst({
-    where: and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)),
-    columns: { postId: true },
-   }),
-  ])
+    if (!result.success) {
+      return zodError(result.error)
+    }
 
-  if (!post) {
-   return fail("Post not found", 404, "NOT_FOUND")
+    const { postId: rawPostId } = result.data
+    const postId = Number(rawPostId)
+    const userId = authResult.user.id
+
+    /**
+     * Senior Developer Optimization: Single Round-Trip Toggle
+     * Using a CTE to:
+     * 1. Check if post exists
+     * 2. Check current like status
+     * 3. Perform Insert or Delete
+     * 4. Return new count and status
+     *
+     * Note: CTE sub-statements see the same snapshot.
+     * We calculate totalLikes by adjusting the initial count.
+     */
+    const query = sql`
+      WITH 
+        check_post AS (
+          SELECT id FROM ${posts} WHERE ${posts.id} = ${postId}
+        ),
+        existing AS (
+          SELECT 1 FROM ${postLikes} WHERE ${postLikes.postId} = ${postId} AND ${postLikes.userId} = ${userId}
+        ),
+        deleted AS (
+          DELETE FROM ${postLikes} 
+          WHERE ${postLikes.postId} = ${postId} AND ${postLikes.userId} = ${userId} 
+          RETURNING 1
+        ),
+        inserted AS (
+          INSERT INTO ${postLikes} (post_id, user_id)
+          SELECT ${postId}, ${userId}
+          WHERE EXISTS (SELECT 1 FROM check_post) 
+            AND NOT EXISTS (SELECT 1 FROM existing)
+          RETURNING 1
+        )
+      SELECT 
+        EXISTS (SELECT 1 FROM check_post) as "postExists",
+        EXISTS (SELECT 1 FROM inserted) as "isLiked",
+        (SELECT count(*)::int FROM ${postLikes} WHERE ${postLikes.postId} = ${postId}) 
+        + (SELECT count(*)::int FROM inserted) 
+        - (SELECT count(*)::int FROM deleted) as "totalLikes"
+    `
+
+    const dbResult = await db.execute(query)
+    const stats = dbResult.rows?.[0] as
+      | {
+          postExists: boolean
+          isLiked: boolean
+          totalLikes: number
+        }
+      | undefined
+
+    if (!stats || !stats.postExists) {
+      return fail("Post not found", 404, "NOT_FOUND")
+    }
+
+    const { isLiked, totalLikes } = stats
+
+    return ok(
+      {
+        liked: isLiked,
+        totalLikes,
+      },
+      isLiked ? "Liked successfully" : "Unliked successfully",
+      isLiked ? 201 : 200
+    )
+  } catch (error) {
+    console.error("[Post Like Toggle Error]:", error)
+    return fail("Failed to toggle like", 500, "INTERNAL_SERVER_ERROR")
   }
-
-  // Toggle Liked State
-  if (existingLike) {
-   await db
-    .delete(postLikes)
-    .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)))
-  } else {
-   await db.insert(postLikes).values({ postId, userId })
-  }
-
-  // Fetch updated total likes in the same trip for immediate client UI reflection
-  const [countResult] = await db
-   .select({ count: sql<number>`count(*)` })
-   .from(postLikes)
-   .where(eq(postLikes.postId, postId))
-
-  const newLikedState = !existingLike
-  const totalLikes = Number(countResult?.count || 0)
-
-  return ok(
-   {
-    liked: newLikedState,
-    totalLikes,
-   },
-   newLikedState ? "Liked successfully" : "Unliked successfully",
-   newLikedState ? 201 : 200
-  )
- } catch (error) {
-  console.error("[Post Like Toggle Error]:", error)
-  return fail("Failed to toggle like", 500, "INTERNAL_SERVER_ERROR")
- }
 }

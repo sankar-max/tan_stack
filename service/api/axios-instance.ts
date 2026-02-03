@@ -1,7 +1,8 @@
 import { env } from "@/lib/env"
+import { getBaseUrl } from "@/lib/utils"
 import axios from "axios"
 
-const baseURL = env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+const baseURL = env.NEXT_PUBLIC_BASE_URL || getBaseUrl()
 
 /**
  * Standardized Axios instance for the application.

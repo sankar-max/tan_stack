@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import { useState } from "react"
 import { usePublicPosts } from "../hooks/get-posts"
 import { useDebounce } from "../hooks/use-debounce"
 import { Hero } from "./blog-section/hero"
