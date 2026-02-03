@@ -2,7 +2,7 @@
 import { use } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { AnimatePresence, motion, Variants } from "framer-motion"
+import { motion, Variants } from "framer-motion"
 import {
   ArrowLeft,
   Calendar,
@@ -10,6 +10,8 @@ import {
   Share2,
   Loader2,
   AlertCircle,
+  Heart,
+  MessageCircle,
 } from "lucide-react"
 import { usePost } from "./hooks"
 import { PostParams } from "./page"
@@ -17,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { useToggleLike } from "../hooks/use-toggle-like"
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -38,10 +41,16 @@ const stagger = {
 export default function PostPage({ params }: PostParams) {
   const { "blog-id": blogId } = use(params)
   const { data: result, isLoading, error } = usePost(blogId)
+  const { mutate: toggleLike, isPending } = useToggleLike()
 
   const post = result?.data
 
-  console.log("post", post)
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (isPending || !post) return
+    toggleLike(post.id)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
@@ -140,6 +149,33 @@ export default function PostPage({ params }: PostParams) {
                 <Clock className="h-4 w-4 opacity-70" />
                 <span>5 min read</span>
               </div>
+              <Separator orientation="vertical" className="h-4" />
+              <div
+                onClick={handleLike}
+                className={`flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 px-3 py-1.5 rounded-full ${
+                  post.isLiked 
+                    ? "bg-red-50 text-red-500 dark:bg-red-500/10" 
+                    : "bg-muted/50 text-muted-foreground hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-500/10"
+                } ${isPending ? "opacity-50 cursor-wait" : ""}`}
+              >
+                <motion.div
+                  animate={post.isLiked ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Heart
+                    className={`h-4 w-4 transition-all ${
+                      post.isLiked ? "fill-current" : ""
+                    }`}
+                  />
+                </motion.div>
+                <span className="font-semibold tabular-nums">
+                  {post.totalLikes}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MessageCircle className="h-4 w-4 opacity-70" />
+                <span>{post.totalComments}</span>
+              </div>
             </div>
           </motion.div>
         </header>
@@ -166,18 +202,68 @@ export default function PostPage({ params }: PostParams) {
           variants={fadeInUp}
           className="flex flex-wrap items-center justify-between gap-6"
         >
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-muted-foreground">
-              Share this story
-            </span>
-            <div className="flex gap-2">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">
+                Share this story
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 rounded-full hover:bg-primary/5 hover:text-primary transition-all"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <Separator orientation="vertical" className="h-8" />
+
+            <div className="flex items-center gap-4">
               <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 rounded-full hover:bg-primary/5 hover:text-primary transition-all"
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                className={`gap-2 rounded-full px-5 py-5 border group/like transition-all duration-300 ${
+                  post.isLiked
+                    ? "text-red-500 bg-red-50/50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20"
+                    : "text-muted-foreground hover:text-red-400 hover:bg-red-50/30 hover:border-red-100/50"
+                }`}
+                disabled={isPending}
               >
-                <Share2 className="h-4 w-4" />
+                <motion.div
+                  animate={post.isLiked ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Heart
+                    className={`h-4 w-4 transition-all duration-300 ${
+                      post.isLiked ? "fill-current" : "group-hover/like:scale-110"
+                    }`}
+                  />
+                </motion.div>
+                <div className="flex flex-col items-start leading-none gap-0.5">
+                  <span className="font-bold text-sm tabular-nums">
+                    {post.totalLikes}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">
+                    Likes
+                  </span>
+                </div>
               </Button>
+
+              <div className="flex items-center gap-2 text-muted-foreground px-4 py-1.5 bg-muted/30 rounded-full border border-transparent">
+                <MessageCircle className="h-4 w-4 opacity-70" />
+                <div className="flex flex-col items-start leading-none gap-0.5">
+                  <span className="font-bold text-sm tabular-nums">
+                    {post.totalComments}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">
+                    Comments
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 

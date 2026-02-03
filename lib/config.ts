@@ -1,9 +1,10 @@
 import { env } from "./env";
+import { getBaseUrl } from "./utils";
 
 export const siteConfig = {
   name: "TanStack Auth",
   description: "A secure and scalable authentication system built with Better Auth and Drizzle.",
-  url: env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+  url: env.NEXT_PUBLIC_BASE_URL || getBaseUrl(),
   links: {
     github: "https://github.com/your-username/tanstack-auth", // Update with your actual repo
   },
