@@ -15,7 +15,7 @@ export const env = createEnv({
     NEXT_PUBLIC_BASE_URL: z.string().url().optional(),
   },
   experimental__runtimeEnv: {
-    NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || process.env.BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined),
+    NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || (process.env.NODE_ENV === "production" ? undefined : process.env.BETTER_AUTH_URL),
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined),
   },
 });
