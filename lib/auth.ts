@@ -4,6 +4,7 @@ import { db } from "@/db" // your drizzle instance
 import { nextCookies } from "better-auth/next-js"
 import * as schema from "@/db/schema/auth.schema"
 import { env } from "./env"
+import { getBaseUrl } from "./utils"
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -11,7 +12,11 @@ export const auth = betterAuth({
     schema: schema,
   }),
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: env.BETTER_AUTH_URL || getBaseUrl(),
+  trustedOrigins: [
+    "https://tan-stack-liart.vercel.app",
+    "https://tan-stack-mj2e6muog-sankar-maxs-projects.vercel.app",
+  ],
   emailAndPassword: {
     enabled: true,
   },
