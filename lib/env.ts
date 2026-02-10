@@ -18,4 +18,13 @@ export const env = createEnv({
     NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.BETTER_AUTH_URL),
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined),
   },
+  skipValidation: !!process.env.SKIP_ENV_VALIDATION || process.env.NODE_ENV === "test",
+  emptyStringAsUndefined: true,
+  onValidationError: (issues) => {
+    console.error("❌ Invalid environment variables:");
+    for (const issue of issues) {
+      console.error(` - ${issue.path?.join(".") ?? "unknown"}: ${issue.message}`);
+    }
+    throw new Error("Invalid environment variables");
+  },
 });
