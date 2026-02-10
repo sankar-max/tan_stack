@@ -14,8 +14,10 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL || getBaseUrl(),
   trustedOrigins: [
+    "https://tan-stack-ten.vercel.app",
     "https://tan-stack-liart.vercel.app",
-    "https://tan-stack-mj2e6muog-sankar-maxs-projects.vercel.app",
+    "https://tan-stack-90pvqbs3u-sankar-maxs-projects.vercel.app",
+    "https://tan-stack-a66poigzx-sankar-maxs-projects.vercel.app",
   ],
   emailAndPassword: {
     enabled: true,
