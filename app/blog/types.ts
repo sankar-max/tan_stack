@@ -1,4 +1,3 @@
-import { db } from "@/db"
 import { posts } from "@/db/schema"
 
 export type PostListItemsT = typeof posts.$inferSelect & {

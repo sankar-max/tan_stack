@@ -3,8 +3,6 @@
 import { db } from "@/db";
 import { posts, user } from "@/db/schema";
 import { and, desc, eq, ilike, or } from "drizzle-orm";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
 // Helper to get current user session
 // Helper to get current user session
