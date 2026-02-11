@@ -31,13 +31,17 @@ export const SocialAuth = ({ option }: { option: OAuthProviderT }) => {
   }
 
   return (
-    <Button 
-      variant="outline" 
-      onClick={handleSignIn} 
+    <Button
+      variant="outline"
+      onClick={handleSignIn}
       disabled={isLoading}
       className="w-full flex items-center gap-2 hover:bg-accent/50 transition-colors"
     >
-      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Icon className="h-4 w-4" />
+      )}
       Continue with {label}
     </Button>
   )

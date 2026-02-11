@@ -15,6 +15,7 @@
     "build:error": "npx tsc --noEmit | awk '{print NR \". \" $0}' > ts-errors-indexed.txt"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.4.18",
     "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -50,7 +51,7 @@
     "@tiptap/react": "^3.16.0",
     "@tiptap/starter-kit": "^3.16.0",
     "axios": "^1.13.2",
-    "better-auth": "^1.4.16",
+    "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
