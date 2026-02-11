@@ -1,45 +1,57 @@
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { db } from "@/db" // your drizzle instance
 import { nextCookies } from "better-auth/next-js"
+import { expo } from "@better-auth/expo"
+
+import { db } from "@/db"
 import * as schema from "@/db/schema/auth.schema"
 import { env } from "./env"
-import { getBaseUrl } from "./utils"
-import { expo } from "@better-auth/expo"
+
 export const auth = betterAuth({
-  account: {
-    skipStateCookieCheck: true,
-  },
-  database: drizzleAdapter(db, {
-    provider: "pg", // or "mysql", "sqlite"
-    schema: schema,
-  }),
-  // advanced: {
-  //   defaultCookieAttributes: {
-  //     httpOnly: true,
-  //     secure: false,
-  //     sameSite: "lax",
-  //   },
-  // },
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL || getBaseUrl(),
+
+  /**
+   * 🚨 CRITICAL FOR EXPO + VERCEL
+   * Never compute this dynamically.
+   * Must be stable & HTTPS.
+   */
+  baseURL: "https://tan-stack-ten.vercel.app",
+
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema,
+  }),
+
+  /**
+   * 🚨 REQUIRED FOR MOBILE + CROSS ORIGIN
+   */
+  advanced: {
+    defaultCookieAttributes: {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    },
+  },
+
+  /**
+   * 🚨 REQUIRED FOR EXPO REQUESTS
+   * Trust schemes — NOT IPs.
+   */
   trustedOrigins: [
     "https://tan-stack-ten.vercel.app",
-    "https://tan-stack-liart.vercel.app",
-    "https://tan-stack-90pvqbs3u-sankar-maxs-projects.vercel.app",
-    "https://tan-stack-a66poigzx-sankar-maxs-projects.vercel.app",
+
+    // Expo Dev / Tunnel Support
+    "exp://",
+    "https://u.expo.dev",
+
+    // Your deep link scheme
     "blog-mobile://",
-    // ...(process.env.NODE_ENV === "development"
-    //   ? [
-    //       "exp://", // Trust all Expo URLs (prefix matching)
-    //       "exp://**", // Trust all Expo URLs (wildcard matching)
-    //       "exp://192.168.*.*:*/**", // Trust 192.168.x.x IP range with any port and path
-    //     ]
-    //   : []),
   ],
+
   emailAndPassword: {
     enabled: true,
   },
+
   socialProviders: {
     github: {
       clientId: env.GITHUB_CLIENT_ID,
@@ -53,11 +65,6 @@ export const auth = betterAuth({
       strategy: "jwt",
     },
   },
-  // advanced: {
-  //   defaultCookieAttributes: {
-  //     sameSite: "lax",
-  //     secure: false, // for localhost development
-  //   },
-  // },
+
   plugins: [nextCookies(), expo()],
 })
