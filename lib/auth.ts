@@ -46,6 +46,7 @@ export const auth = betterAuth({
 
     // Your deep link scheme
     "blog-mobile://",
+    "null",
   ],
 
   emailAndPassword: {
