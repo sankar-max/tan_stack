@@ -12,10 +12,11 @@ export const auth = betterAuth({
 
   /**
    * 🚨 CRITICAL FOR EXPO + VERCEL
-   * Never compute this dynamically.
-   * Must be stable & HTTPS.
+   * Use production URL normally, but allow local IP for mobile dev.
    */
-  baseURL: "https://tan-stack-ten.vercel.app",
+  baseURL: process.env.NODE_ENV === "production" 
+    ? "https://tan-stack-ten.vercel.app" 
+    : (process.env.BETTER_AUTH_URL || "http://localhost:3000"),
 
   database: drizzleAdapter(db, {
     provider: "pg",
