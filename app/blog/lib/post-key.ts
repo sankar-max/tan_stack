@@ -4,5 +4,5 @@ export const postKeys = {
   publicLatest: (limit = 12) =>
     [...postKeys.all, "public", "latest", limit] as const,
   bySlug: (id: string) => ["post", id] as const,
-  // later: myPosts(userId), byTag(tag), etc.
+  myPosts: (userId: string) => [...postKeys.all, "by-author", userId] as const,
 }

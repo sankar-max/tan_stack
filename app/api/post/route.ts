@@ -9,22 +9,29 @@ import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, asc, eq } from "drizzle-orm"
 
 // schema
-import { CreatePostSchema } from "./schema"
-import { SearchQuerySchema } from "@/app/api/_utilities/schema/search-schema"
+import { CreatePostSchema, PostQuerySchema } from "./schema"
 import { parseSearchParams } from "@/app/api/_utilities/http/parse-search-params"
 
 export async function GET(req: Request) {
-  const searchParams = parseSearchParams(req, SearchQuerySchema)
+  const searchParams = parseSearchParams(req, PostQuerySchema)
   if (!searchParams.success) {
     return zodError(searchParams.error)
   }
 
-  const { page, limit, search, sort, order } = searchParams.data
+  const { page, limit, search, sort, order, authorId, published } =
+    searchParams.data
   const offset = (page - 1) * limit
 
   const where = and(
     search ? ilike(posts.title, `%${search}%`) : undefined,
-    eq(posts.published, true) // Only show published posts for search
+    authorId ? eq(posts.authorId, authorId) : undefined,
+    published === true ? eq(posts.published, true) : undefined, // Allow fetching drafts if not explicitly filtering for published
+    // Note: If no published filter is provided, we might want to default to published=true for public feed,
+    // but for dashboard listing (authorId present), we want all.
+    // Let's refine:
+    // If authorId is provided (Dashboard), show all (drafts + published) unless filtered.
+    // If no authorId (Public Feed), force published=true.
+    !authorId ? eq(posts.published, true) : undefined,
   )
 
   const orderBy = order === "asc" ? asc(posts[sort]) : desc(posts[sort])
@@ -50,12 +57,14 @@ export async function GET(req: Request) {
           name: user.name,
           image: user.image,
         },
-        totalLikes: sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(
-          Number
-        ),
-        totalComments: sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(
-          Number
-        ),
+        totalLikes:
+          sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(
+            Number,
+          ),
+        totalComments:
+          sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(
+            Number,
+          ),
         isLiked: userId
           ? sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`
           : sql<boolean>`false`,

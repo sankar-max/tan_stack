@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { nextCookies } from "better-auth/next-js"
 import { expo } from "@better-auth/expo"
-import { bearer } from "better-auth/plugins";
+import { bearer } from "better-auth/plugins"
 
 import { db } from "@/db"
 import * as schema from "@/db/schema/auth.schema"
@@ -15,9 +15,10 @@ export const auth = betterAuth({
    * 🚨 CRITICAL FOR EXPO + VERCEL
    * Use production URL normally, but allow local IP for mobile dev.
    */
-  baseURL: process.env.NODE_ENV === "production"
-    ? "https://tan-stack-ten.vercel.app"
-    : (process.env.BETTER_AUTH_URL || "http://localhost:3000"),
+  baseURL:
+    process.env.NODE_ENV === "production"
+      ? "https://tan-stack-ten.vercel.app"
+      : process.env.BETTER_AUTH_URL || "http://localhost:3000",
 
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -41,6 +42,7 @@ export const auth = betterAuth({
    */
   trustedOrigins: [
     "https://tan-stack-ten.vercel.app",
+    "http://localhost:3000",
 
     // Expo Dev / Tunnel Support
     "exp://",

@@ -104,31 +104,31 @@ export default function PostPage({ params }: PostParams) {
 
       <article className="space-y-10">
         {/* Header Section */}
-        <header className="space-y-6">
+        <header className="space-y-6 max-w-2xl mx-auto text-center">
           <motion.div variants={fadeInUp}>
             <Badge
               variant="secondary"
               className="mb-4 bg-primary/10 text-primary hover:bg-primary/20 border-none px-3 py-1"
             >
-              Article
+              Story
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] bg-clip-text text-transparent bg-linear-to-b from-foreground to-foreground/70">
+            <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight leading-[1.1] bg-clip-text text-transparent bg-linear-to-b from-foreground to-foreground/70">
               {post.title}
             </h1>
           </motion.div>
 
           <motion.div
             variants={fadeInUp}
-            className="flex flex-wrap items-center gap-6 py-4"
+            className="flex flex-wrap items-center justify-center gap-6 py-4"
           >
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 ring-2 ring-primary/10">
+            <div className="flex items-center gap-3 bg-muted/30 pl-2 pr-4 py-1.5 rounded-full border border-border/40">
+              <Avatar className="h-8 w-8 ring-2 ring-primary/10">
                 <AvatarImage src={post.author.image ?? undefined} />
-                <AvatarFallback className="bg-primary/5 text-primary text-xs">
+                <AvatarFallback className="bg-primary/5 text-primary text-[10px]">
                   {post.author.name?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col">
+              <div className="flex flex-col text-left leading-none gap-0.5">
                 <span className="text-sm font-semibold text-foreground">
                   {post.author.name}
                 </span>
@@ -149,33 +149,6 @@ export default function PostPage({ params }: PostParams) {
                 <Clock className="h-4 w-4 opacity-70" />
                 <span>5 min read</span>
               </div>
-              <Separator orientation="vertical" className="h-4" />
-              <div
-                onClick={handleLike}
-                className={`flex items-center gap-2 cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 px-3 py-1.5 rounded-full ${
-                  post.isLiked 
-                    ? "bg-red-50 text-red-500 dark:bg-red-500/10" 
-                    : "bg-muted/50 text-muted-foreground hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-500/10"
-                } ${isPending ? "opacity-50 cursor-wait" : ""}`}
-              >
-                <motion.div
-                  animate={post.isLiked ? { scale: [1, 1.4, 1] } : { scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Heart
-                    className={`h-4 w-4 transition-all ${
-                      post.isLiked ? "fill-current" : ""
-                    }`}
-                  />
-                </motion.div>
-                <span className="font-semibold tabular-nums">
-                  {post.totalLikes}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <MessageCircle className="h-4 w-4 opacity-70" />
-                <span>{post.totalComments}</span>
-              </div>
             </div>
           </motion.div>
         </header>
@@ -183,43 +156,28 @@ export default function PostPage({ params }: PostParams) {
         {/* Content Section */}
         <motion.div
           variants={fadeInUp}
-          className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground/90 prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/40"
+          className="prose prose-lg dark:prose-invert max-w-2xl mx-auto prose-headings:font-serif prose-headings:font-bold prose-p:font-serif prose-p:text-lg prose-p:leading-loose prose-p:text-foreground/90 prose-a:text-primary prose-img:rounded-xl prose-img:shadow-lg"
         >
-          <div className="text-xl md:text-2xl font-serif text-foreground/90 leading-relaxed italic border-l-4 border-primary/20 pl-6 mb-12">
-            {post.excerpt}
-          </div>
+          {post.excerpt && (
+            <div className="text-xl md:text-2xl font-serif text-foreground/80 leading-relaxed italic border-l-4 border-primary/20 pl-6 mb-12">
+              {post.excerpt}
+            </div>
+          )}
 
           <div
-            className="text-lg leading-loose space-y-6"
+            className="font-serif sm:text-lg md:text-xl leading-relaxed tracking-wide space-y-8"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </motion.div>
 
-        {/* Footer / Share Section */}
-        <Separator className="my-12" />
+        {/* Footer / Interaction Section */}
+        <div className="max-w-2xl mx-auto">
+          <Separator className="my-12" />
 
-        <motion.footer
-          variants={fadeInUp}
-          className="flex flex-wrap items-center justify-between gap-6"
-        >
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-muted-foreground">
-                Share this story
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 rounded-full hover:bg-primary/5 hover:text-primary transition-all"
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <Separator orientation="vertical" className="h-8" />
-
+          <motion.footer
+            variants={fadeInUp}
+            className="flex flex-wrap items-center justify-between gap-6"
+          >
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -239,7 +197,9 @@ export default function PostPage({ params }: PostParams) {
                 >
                   <Heart
                     className={`h-4 w-4 transition-all duration-300 ${
-                      post.isLiked ? "fill-current" : "group-hover/like:scale-110"
+                      post.isLiked
+                        ? "fill-current"
+                        : "group-hover/like:scale-110"
                     }`}
                   />
                 </motion.div>
@@ -247,32 +207,28 @@ export default function PostPage({ params }: PostParams) {
                   <span className="font-bold text-sm tabular-nums">
                     {post.totalLikes}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">
-                    Likes
-                  </span>
                 </div>
               </Button>
 
               <div className="flex items-center gap-2 text-muted-foreground px-4 py-1.5 bg-muted/30 rounded-full border border-transparent">
                 <MessageCircle className="h-4 w-4 opacity-70" />
-                <div className="flex flex-col items-start leading-none gap-0.5">
-                  <span className="font-bold text-sm tabular-nums">
-                    {post.totalComments}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">
-                    Comments
-                  </span>
-                </div>
+                <span className="font-bold text-sm tabular-nums">
+                  {post.totalComments}
+                </span>
               </div>
             </div>
-          </div>
 
-          <Link href="/blog">
-            <Button className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-              Explore More Stories
-            </Button>
-          </Link>
-        </motion.footer>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full hover:bg-primary/5 hover:text-primary transition-all"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </motion.footer>
+        </div>
       </article>
     </motion.main>
   )
