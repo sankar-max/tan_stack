@@ -1,8 +1,6 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import { QueryClient } from "@tanstack/react-query"
-import BlogSection from "./_components/blog-section"
-import { postKeys } from "./lib/post-key"
-import { postService } from "@/service/post"
+import { BlogSection, postKeys, postService } from "@/features/blog"
 import { headers } from "next/headers"
 
 async function Blog() {

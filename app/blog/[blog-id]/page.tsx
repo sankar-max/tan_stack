@@ -3,8 +3,7 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query"
-import { postKeys } from "../lib/post-key"
-import { postService } from "@/service/post"
+import { postKeys, postService } from "@/features/blog"
 import PostPage from "./post-page"
 
 export type PostParams = {

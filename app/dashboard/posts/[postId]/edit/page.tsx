@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { postService } from "@/service/post"
-import { PostForm } from "../../_components/post-form"
-import { updatePost } from "@/app/actions/posts"
+import { postService } from "@/features/blog"
+import { PostForm } from "@/features/blog"
+import { updatePost } from "@/features/blog"
 
 interface EditPostPageProps {
   params: Promise<{ postId: string }>

@@ -5,8 +5,7 @@ import { signOut } from "@/lib/auth-client"
 // import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { ThemeDropdown } from "@/components/theme/theme-dropdown"
 import { Loader2, LogOutIcon } from "lucide-react"
-import { useUserProfile } from "@/hooks/use-user-profile"
-import UserAvatar from "@/components/profile/avatar"
+import { useUserProfile, UserAvatar } from "@/features/user"
 import { useRouter } from "next/navigation"
 
 export default function Dashboard() {

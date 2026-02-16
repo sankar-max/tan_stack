@@ -1,11 +1,14 @@
-import { getCurrentUser } from "@/lib/requireAuth"
-import { ok, fail } from "../../lib/response"
-import { GetPostSchemaQuery } from "./schema"
-import { zodError } from "../../lib/zod-error"
+import { getCurrentUser, requireUser } from "@/lib/requireAuth"
+import { ok, fail } from "@/lib/api/response"
+import {
+  GetPostSchemaQuery,
+  CreatePostSchema,
+} from "@/features/blog/services/schema"
+import { zodError } from "@/lib/api/zod-error"
+import { postServiceServer } from "@/features/blog"
 import { db } from "@/db"
-import { comments, postLikes, posts } from "@/db/schema/blog.schema"
-import { user } from "@/db/schema/auth.schema"
-import { eq, sql } from "drizzle-orm"
+import { posts } from "@/db/schema/blog.schema"
+import { eq } from "drizzle-orm"
 
 export async function GET(
   req: Request,
@@ -20,47 +23,22 @@ export async function GET(
   const sessionUser = await getCurrentUser(req)
   const userId = sessionUser?.id || null
 
-  const [post] = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      slug: posts.slug,
-      excerpt: posts.excerpt,
-      content: posts.content,
-      published: posts.published,
-      createdAt: posts.createdAt,
-      updatedAt: posts.updatedAt,
-      author: {
-        id: user.id,
-        name: user.name,
-        image: user.image,
-      },
-      totalLikes:
-        sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(
-          Number,
-        ),
-      totalComments:
-        sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(
-          Number,
-        ),
-      isLiked: userId
-        ? sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`
-        : sql<boolean>`false`,
+  try {
+    const post = await postServiceServer.getPost({
+      postId: Number(result.data.id),
+      userId,
     })
-    .from(posts)
-    .leftJoin(user, eq(posts.authorId, user.id))
-    .where(eq(posts.id, result.data.id))
-    .limit(1)
 
-  if (!post) {
-    return fail("Post not found", 404, "NOT_FOUND")
+    if (!post) {
+      return fail("Post not found", 404, "NOT_FOUND")
+    }
+
+    return ok(post)
+  } catch (error) {
+    console.error("[Get Post Error]:", error)
+    return fail("Failed to fetch post", 500, "INTERNAL_SERVER_ERROR")
   }
-
-  return ok(post)
 }
-
-import { CreatePostSchema } from "../schema"
-import { requireUser } from "@/lib/requireAuth"
 
 export async function PATCH(
   req: Request,
@@ -81,6 +59,8 @@ export async function PATCH(
   }
 
   // Check ownership
+  // NOTE: For now we keep this simple DB check here as it's an AuthZ check.
+  // Ideally this could be in a 'checkPostOwnership' service method if reused.
   const [existingPost] = await db
     .select()
     .from(posts)
@@ -95,16 +75,13 @@ export async function PATCH(
     return fail("Forbidden", 403, "FORBIDDEN")
   }
 
-  const [updatedPost] = await db
-    .update(posts)
-    .set({
-      ...result.data,
-      updatedAt: new Date(),
-    })
-    .where(eq(posts.id, Number(id)))
-    .returning()
-
-  return ok(updatedPost)
+  try {
+    const updatedPost = await postServiceServer.updatePost(id, result.data)
+    return ok(updatedPost)
+  } catch (error) {
+    console.error("[Update Post Error]:", error)
+    return fail("Failed to update post", 500, "INTERNAL_SERVER_ERROR")
+  }
 }
 
 export async function DELETE(
@@ -133,7 +110,11 @@ export async function DELETE(
     return fail("Forbidden", 403, "FORBIDDEN")
   }
 
-  await db.delete(posts).where(eq(posts.id, Number(id)))
-
-  return ok({ message: "Post deleted successfully" })
+  try {
+    await postServiceServer.deletePost(id)
+    return ok({ message: "Post deleted successfully" })
+  } catch (error) {
+    console.error("[Delete Post Error]:", error)
+    return fail("Failed to delete post", 500, "INTERNAL_SERVER_ERROR")
+  }
 }

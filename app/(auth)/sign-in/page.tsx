@@ -1,4 +1,4 @@
-import { AuthCard, SignInForm } from "../_components"
+import { AuthCard, SignInForm } from "@/features/auth"
 
 export default function SignInPage() {
   return (

@@ -13,13 +13,13 @@ import {
   Heart,
   MessageCircle,
 } from "lucide-react"
-import { usePost } from "./hooks"
+import { usePost } from "@/features/blog/hooks"
 import { PostParams } from "./page"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { useToggleLike } from "../hooks/use-toggle-like"
+import { useToggleLike } from "@/features/blog"
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },

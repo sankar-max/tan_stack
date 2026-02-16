@@ -3,14 +3,13 @@ import { PlusCircle } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { PostList } from "./_components/post-list"
+import { PostList } from "@/features/blog"
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query"
-import { postKeys } from "@/app/blog/lib/post-key"
-import { postService } from "@/service/post"
+import { postKeys, postService } from "@/features/blog"
 
 export default async function PostsPage() {
   const session = await auth.api.getSession({

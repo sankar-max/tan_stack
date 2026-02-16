@@ -1,7 +1,6 @@
 "use client"
 
-import { createPost } from "@/app/actions/posts"
-import { PostForm } from "../_components/post-form"
+import { createPost, PostForm } from "@/features/blog"
 
 export default function NewPostPage() {
   return <PostForm action={createPost} submitLabel="Publish" />

@@ -1,4 +1,4 @@
-import { AppSidebar } from "./_components/app-sidebar"
+import { AppSidebar } from "@/features/blog/components/AppSidebar"
 import {
   SidebarInset,
   SidebarProvider,
