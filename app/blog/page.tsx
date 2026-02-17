@@ -3,19 +3,18 @@ import { QueryClient } from "@tanstack/react-query"
 import { BlogSection, postKeys, postService } from "@/features/blog"
 import { headers } from "next/headers"
 
+// Enable Incremental Static Regeneration (ISR)
+export const revalidate = 60 // Revalidate every 60 seconds
+
 async function Blog() {
   const queryClient = new QueryClient()
-  const reqHeaders = await headers()
-  const cookie = reqHeaders.get("cookie")
 
+  // Fetch data via API Route handler - Anonymous prefetch for ISR
   await queryClient.prefetchQuery({
     queryKey: [...postKeys.publicLatest(12), ""],
-    queryFn: () =>
-      postService.getPosts(
-        { limit: 12 },
-        { headers: { Cookie: cookie ?? "" } },
-      ),
+    queryFn: () => postService.getPosts({ limit: 12 }),
   })
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <BlogSection />

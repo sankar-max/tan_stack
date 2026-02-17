@@ -48,13 +48,13 @@ export function Card({ post }: CardProps) {
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6 ring-1 ring-border/50">
-                  <AvatarImage src={post.author.image ?? undefined} />
+                  <AvatarImage src={post.author?.image ?? undefined} />
                   <AvatarFallback className="text-[10px]">
-                    {post.author.name?.[0]}
+                    {post.author?.name?.[0] || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-xs font-medium text-muted-foreground">
-                  {post.author.name}
+                  {post.author?.name || "Anonymous"}
                 </span>
               </div>
               <span className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">

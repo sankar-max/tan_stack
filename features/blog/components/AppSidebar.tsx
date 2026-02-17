@@ -13,11 +13,13 @@ type User = {
   image?: string | null
 }
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  user?: User | null
-}
+import { authClient } from "@/lib/auth-client"
 
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
+
+export function AppSidebar({ ...props }: AppSidebarProps) {
+  const { data: session } = authClient.useSession()
+  const user = session?.user
   return (
     <Sidebar
       collapsible="icon"

@@ -3,9 +3,9 @@ import { posts } from "@/db/schema"
 export type PostListItemsT = typeof posts.$inferSelect & {
   author: {
     id: string
-    name: string | null // user.name is nullable in schema? No, notNull().
-    image: string | null // image is text("image") usually nullable or string.
-  }
+    name: string | null
+    image: string | null
+  } | null
   totalLikes: number
   totalComments: number
   isLiked: boolean

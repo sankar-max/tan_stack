@@ -6,6 +6,39 @@ import { and, ilike, sql, desc, asc, eq } from "drizzle-orm"
 
 export const postServiceServer = {
 
+  async getPostBySlug(slug: string) {
+    const [post] = await db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        excerpt: posts.excerpt,
+        content: posts.content,
+        published: posts.published,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        author: {
+          id: user.id,
+          name: user.name,
+          image: user.image,
+        },
+        totalLikes:
+          sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(
+            Number,
+          ),
+        totalComments:
+          sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(
+            Number,
+          ),
+      })
+      .from(posts)
+      .leftJoin(user, eq(posts.authorId, user.id))
+      .where(eq(posts.slug, slug))
+      .limit(1)
+
+    return post
+  },
+
   async getPosts({
     page,
     limit,
@@ -50,6 +83,8 @@ export const postServiceServer = {
           published: posts.published,
           createdAt: posts.createdAt,
           updatedAt: posts.updatedAt,
+          authorId: posts.authorId,
+          deletedAt: posts.deletedAt,
           author: {
             id: user.id,
             name: user.name,
@@ -85,6 +120,8 @@ export const postServiceServer = {
       posts: data,
       total: Number(total),
       totalPages: Math.ceil(Number(total) / limit),
+      page,
+      limit,
     }
   },
 

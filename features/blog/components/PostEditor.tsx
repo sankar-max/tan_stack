@@ -137,48 +137,57 @@ const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       e.target.value = ""
     }
 
-    if (!editor) {
-      return null
-    }
-
-    return (
-      <div className="border rounded-md overflow-hidden bg-card focus-within:ring-2 ring-primary/20 transition-all">
-        <div className="border-b bg-muted/40 p-2 flex gap-2 overflow-x-auto">
+    const toolbar = (
+      <div className="border-b bg-muted/40 p-2 flex gap-2 overflow-x-auto">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={addImage}
+          className="text-muted-foreground hover:text-foreground"
+          type="button"
+          disabled={!editor}
+        >
+          <ImageIcon className="w-4 h-4 mr-2" />
+          Add Image
+        </Button>
+        <div className="relative">
           <Button
             variant="ghost"
             size="sm"
-            onClick={addImage}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground relative"
             type="button"
+            disabled={isUploading || !editor}
           >
-            <ImageIcon className="w-4 h-4 mr-2" />
-            Add Image
+            {isUploading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4 mr-2" />
+            )}
+            Import File
+            <Input
+              type="file"
+              accept=".txt,.md"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={handleFileImport}
+              disabled={isUploading || !editor}
+            />
           </Button>
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground relative"
-              type="button"
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="w-4 h-4 mr-2" />
-              )}
-              Import File
-              <Input
-                type="file"
-                accept=".txt,.md"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={handleFileImport}
-                disabled={isUploading}
-              />
-            </Button>
-          </div>
         </div>
-        <EditorContent editor={editor} />
+      </div>
+    )
+
+    return (
+      <div className="border rounded-md overflow-hidden bg-white dark:bg-zinc-950 focus-within:ring-2 ring-primary/20 transition-all">
+        {toolbar}
+        <div className="relative min-h-[300px]">
+          {editor ? (
+            <EditorContent editor={editor} />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/5">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/50" />
+            </div>
+          )}
+        </div>
       </div>
     )
   },

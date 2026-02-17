@@ -14,12 +14,12 @@ import {
   MessageCircle,
 } from "lucide-react"
 import { usePost } from "@/features/blog/hooks"
-import { PostParams } from "./page"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useToggleLike } from "@/features/blog"
+import { PostPageProps } from "./page"
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -38,7 +38,7 @@ const stagger = {
   },
 }
 
-export default function PostPage({ params }: PostParams) {
+export default function BlogPostContent({ params }: PostPageProps) {
   const { "blog-id": blogId } = use(params)
   const { data: result, isLoading, error } = usePost(blogId)
   const { mutate: toggleLike, isPending } = useToggleLike()
@@ -123,14 +123,14 @@ export default function PostPage({ params }: PostParams) {
           >
             <div className="flex items-center gap-3 bg-muted/30 pl-2 pr-4 py-1.5 rounded-full border border-border/40">
               <Avatar className="h-8 w-8 ring-2 ring-primary/10">
-                <AvatarImage src={post.author.image ?? undefined} />
+                <AvatarImage src={post?.author?.image ?? undefined} />
                 <AvatarFallback className="bg-primary/5 text-primary text-[10px]">
-                  {post.author.name?.[0]}
+                  {post?.author?.name?.[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col text-left leading-none gap-0.5">
                 <span className="text-sm font-semibold text-foreground">
-                  {post.author.name}
+                  {post?.author?.name}
                 </span>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                   Author

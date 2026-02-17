@@ -3,7 +3,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { postService } from "@/features/blog"
 import { PostForm } from "@/features/blog"
-import { updatePost } from "@/features/blog"
+import { updatePost } from "@/features/blog/server"
 
 interface EditPostPageProps {
   params: Promise<{ postId: string }>
@@ -31,7 +31,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     return <div>Post not found</div>
   }
 
-  if (post.author.id !== session.user.id) {
+  if (post.author?.id !== session.user.id) {
     return <div>Unauthorized to edit this post</div>
   }
 

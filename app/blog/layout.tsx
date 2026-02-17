@@ -4,8 +4,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
 import { Separator } from "@/components/ui/separator"
 import {
   Breadcrumb,
@@ -16,18 +14,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
-export default async function BlogLayout({
+export default function BlogLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
   return (
     <SidebarProvider>
-      <AppSidebar user={session?.user} />
+      <AppSidebar />
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/40 bg-background/80 px-6 backdrop-blur-md transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-14">
           <div className="flex items-center gap-2">

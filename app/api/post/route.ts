@@ -9,7 +9,7 @@ import {
   PostQuerySchema,
 } from "@/features/blog/services/schema"
 import { parseSearchParams } from "@/lib/http"
-import { postServiceServer } from "@/features/blog/services/server-post-service"
+import { postServiceServer } from "@/features/blog/server"
 
 export async function GET(req: Request) {
   const searchParams = parseSearchParams(req, PostQuerySchema)
