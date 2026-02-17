@@ -9,10 +9,14 @@ async function Blog() {
   const queryClient = new QueryClient()
 
   // Fetch data via API Route handler - Anonymous prefetch for ISR
-  await queryClient.prefetchQuery({
-    queryKey: [...postKeys.publicLatest(12), ""],
-    queryFn: () => postService.getPosts({ limit: 12 }),
-  })
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: [...postKeys.publicLatest(12), ""],
+      queryFn: () => postService.getPosts({ limit: 12 }),
+    })
+  } catch (error) {
+    console.error("Failed to prefetch posts for blog home:", error)
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

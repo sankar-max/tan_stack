@@ -15,17 +15,22 @@ export interface PostPageProps {
 }
 
 export async function generateStaticParams() {
-  const result = await postServiceServer.getPosts({
-    limit: 100,
-    page: 1,
-    sort: "createdAt",
-    order: "desc",
-    published: true,
-  })
+  try {
+    const result = await postServiceServer.getPosts({
+      limit: 100,
+      page: 1,
+      sort: "createdAt",
+      order: "desc",
+      published: true,
+    })
 
-  return result.posts.map((post) => ({
-    "blog-id": post.id.toString(),
-  }))
+    return result.posts.map((post) => ({
+      "blog-id": post.id.toString(),
+    }))
+  } catch (error) {
+    console.error("Failed to generate static params for blog posts:", error)
+    return []
+  }
 }
 
 export default async function PostPage({ params }: PostPageProps) {
