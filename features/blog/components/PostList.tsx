@@ -133,7 +133,7 @@ export function PostList({ userId }: PostListProps) {
           <CardFooter className="border-t bg-muted/40 px-6 py-3">
             <div className="text-xs text-muted-foreground w-full flex justify-between">
               <span>{format(new Date(post.createdAt), "MMM d, yyyy")}</span>
-              <Link href={`/blog/${post.slug}`} className="hover:underline">
+              <Link href={`/blog/${post.id}`} className="hover:underline">
                 View Live
               </Link>
             </div>

@@ -3,7 +3,7 @@ import { ok, fail } from "@/lib/api/response"
 import { parseSearchParams } from "@/lib/http"
 import { GetPostLikesQuerySchema } from "@/features/blog/services/schema"
 import { zodError } from "@/lib/api/zod-error"
-import { postServiceServer } from "@/features/blog"
+import { postServiceServer } from "@/features/blog/services/server-post-service"
 
 type PostLikeParams = {
   params: Promise<{

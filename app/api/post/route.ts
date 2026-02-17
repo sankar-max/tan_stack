@@ -2,7 +2,6 @@ import { requireUser, getCurrentUser } from "@/lib/requireAuth"
 import { zodError } from "@/lib/api/zod-error"
 import { ok, fail } from "@/lib/api/response"
 
-import { postServiceServer } from "@/features/blog"
 
 // schema
 import {
@@ -10,6 +9,7 @@ import {
   PostQuerySchema,
 } from "@/features/blog/services/schema"
 import { parseSearchParams } from "@/lib/http"
+import { postServiceServer } from "@/features/blog/services/server-post-service"
 
 export async function GET(req: Request) {
   const searchParams = parseSearchParams(req, PostQuerySchema)

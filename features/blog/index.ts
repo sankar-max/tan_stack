@@ -2,7 +2,6 @@ export * from "./types"
 export * from "./actions" // Exports createPost, updatePost, etc.
 export * from "./hooks"
 export { postService } from "./services"
-export { postServiceServer } from "./services/server"
 export { default as BlogSection } from "./components/BlogSection"
 export { AppSidebar } from "./components/AppSidebar"
 export * from "./utils/postKey"

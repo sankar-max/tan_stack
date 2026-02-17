@@ -4,7 +4,7 @@ import { ok, fail } from "@/lib/api/response"
 
 // schema
 import { LikePostSchema } from "@/features/blog/services/schema"
-import { postServiceServer } from "@/features/blog"
+import { postServiceServer } from "@/features/blog/services/server-post-service"
 
 /**
  * @description Senior Developer Pattern: Optimized Post Like Toggle

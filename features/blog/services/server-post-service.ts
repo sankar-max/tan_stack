@@ -3,11 +3,9 @@ import { comments, postLikes, posts } from "@/db/schema/blog.schema"
 import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, asc, eq } from "drizzle-orm"
 
-/**
- * Server-side service for Blog feature.
- * Encapsulates direct database operations.
- */
+
 export const postServiceServer = {
+
   async getPosts({
     page,
     limit,
@@ -204,10 +202,10 @@ export const postServiceServer = {
     const dbResult = await db.execute(query)
     const stats = dbResult.rows?.[0] as
       | {
-          postExists: boolean
-          isLiked: boolean
-          totalLikes: number
-        }
+        postExists: boolean
+        isLiked: boolean
+        totalLikes: number
+      }
       | undefined
 
     return stats

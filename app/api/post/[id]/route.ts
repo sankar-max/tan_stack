@@ -5,7 +5,7 @@ import {
   CreatePostSchema,
 } from "@/features/blog/services/schema"
 import { zodError } from "@/lib/api/zod-error"
-import { postServiceServer } from "@/features/blog"
+import { postServiceServer } from "@/features/blog/services/server-post-service"
 import { db } from "@/db"
 import { posts } from "@/db/schema/blog.schema"
 import { eq } from "drizzle-orm"
