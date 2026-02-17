@@ -5,6 +5,7 @@ import { usePublicPosts } from "../hooks/usePublicPosts"
 import { useDebounce } from "../hooks/useDebounce"
 import { Hero } from "./BlogSection/Hero"
 import { Grid } from "./BlogSection/Grid"
+import { usePostLikes } from "../hooks/usePostLikes"
 
 function BlogSection() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -12,6 +13,12 @@ function BlogSection() {
 
   // Fetch public posts with debounced search query
   const { data: result, isLoading, error } = usePublicPosts(debouncedQuery)
+  const {
+    data: likes,
+    isLoading: likesLoading,
+    error: likesError,
+  } = usePostLikes()
+  console.log("likes", likes)
 
   const isSearching = debouncedQuery.length > 0
 

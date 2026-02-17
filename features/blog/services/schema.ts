@@ -28,6 +28,11 @@ export const PostQuerySchema = z.object({
     .transform((val) => val === "true"),
 })
 
+export const GetPostLikesSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+})
+
 export type PostQueryInput = z.infer<typeof PostQuerySchema>
 
 export const GetPostSchemaQuery = z.object({
