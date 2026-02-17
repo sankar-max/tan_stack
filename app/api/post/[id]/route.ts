@@ -1,5 +1,6 @@
 import { getCurrentUser, requireUser } from "@/lib/requireAuth"
 import { ok, fail } from "@/lib/api/response"
+import { revalidatePath } from "next/cache"
 import {
   GetPostSchemaQuery,
   CreatePostSchema,
@@ -77,6 +78,11 @@ export async function PATCH(
 
   try {
     const updatedPost = await postServiceServer.updatePost(id, result.data)
+
+    // Revalidate the blog list and the specific post page
+    revalidatePath("/blog")
+    revalidatePath(`/blog/${id}`)
+
     return ok(updatedPost)
   } catch (error) {
     console.error("[Update Post Error]:", error)
@@ -112,6 +118,11 @@ export async function DELETE(
 
   try {
     await postServiceServer.deletePost(id)
+
+    // Revalidate the blog list and remove the specific post page from cache
+    revalidatePath("/blog")
+    revalidatePath(`/blog/${id}`)
+
     return ok({ message: "Post deleted successfully" })
   } catch (error) {
     console.error("[Delete Post Error]:", error)

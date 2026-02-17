@@ -1,6 +1,7 @@
 import { requireUser, getCurrentUser } from "@/lib/requireAuth"
 import { zodError } from "@/lib/api/zod-error"
 import { ok, fail } from "@/lib/api/response"
+import { revalidatePath } from "next/cache"
 
 
 // schema
@@ -73,6 +74,9 @@ export async function POST(req: Request) {
       published,
       authorId,
     })
+
+    // Revalidate the blog list to show the new post
+    revalidatePath("/blog")
 
     return ok(newPost, "Post created successfully", 201)
   } catch (error) {

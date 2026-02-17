@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/requireAuth"
 import { zodError } from "@/lib/api/zod-error"
 import { ok, fail } from "@/lib/api/response"
+import { revalidatePath } from "next/cache"
 
 // schema
 import { LikePostSchema } from "@/features/blog/services/schema"
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
     }
 
     const { isLiked, totalLikes } = stats
+
+    // Revalidate the blog list to reflect updated like counts
+    revalidatePath("/blog")
 
     return ok(
       {
