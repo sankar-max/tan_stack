@@ -37,21 +37,21 @@ export function Grid({
     <div key={posts.length} className="w-full">
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <div
-            // initial={{ opacity: 0 }}
-            // animate={{ opacity: 1 }}
-            // exit={{ opacity: 0 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="flex flex-col items-center py-20"
           >
             <Loader2 className="h-8 w-8 animate-spin text-primary/50 mb-4" />
             <p className="text-muted-foreground font-medium">
               Fetching content...
             </p>
-          </div>
+          </motion.div>
         ) : error || status === "error" ? (
-          <div
-            // initial={{ opacity: 0 }}
-            // animate={{ opacity: 1 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="flex flex-col items-center py-20 text-center"
           >
             <div className="bg-destructive/10 p-4 rounded-full mb-4">
@@ -63,11 +63,11 @@ export function Grid({
             <p className="text-muted-foreground text-sm">
               {error?.message || errorMessage}
             </p>
-          </div>
+          </motion.div>
         ) : posts.length === 0 ? (
-          <div
-            // initial={{ opacity: 0 }}
-            // animate={{ opacity: 1 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="text-center py-32"
           >
             <p className="text-xl text-muted-foreground font-medium">
@@ -76,18 +76,18 @@ export function Grid({
             <p className="text-sm text-muted-foreground/60 mt-2">
               Try a different keyword.
             </p>
-          </div>
+          </motion.div>
         ) : (
-          <div
-            // variants={container}
-            // initial="hidden"
-            // animate="show"
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
             className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
           >
             {posts.map((post) => (
               <Card key={post.id} post={post} />
             ))}
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

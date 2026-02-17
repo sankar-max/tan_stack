@@ -19,7 +19,7 @@ interface PostFormProps {
     published: boolean
     excerpt?: string | null
   }
-  action: (prevState: PostState, formData: FormData) => Promise<PostState>
+  action: (_prevState: PostState, _formData: FormData) => Promise<PostState>
   submitLabel?: string
 }
 

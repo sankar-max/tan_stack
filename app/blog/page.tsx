@@ -1,7 +1,6 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import { QueryClient } from "@tanstack/react-query"
 import { BlogSection, postKeys, postService } from "@/features/blog"
-import { headers } from "next/headers"
 
 // Enable Incremental Static Regeneration (ISR)
 export const revalidate = 60 // Revalidate every 60 seconds

@@ -8,7 +8,7 @@ import { Search } from "lucide-react"
 
 interface HeroProps {
   searchQuery: string
-  setSearchQuery: (query: string) => void
+  setSearchQuery: (_query: string) => void
   debouncedQuery: string
   isSearching: boolean
   postsCount: number
