@@ -71,6 +71,10 @@ class PostService {
   async getPostLikes(postId: number, params?: { page?: number; limit?: number }) {
     return api.get<PostListResponse>(POST_API_CONSTANTS.VIEW_POST_LIKES(postId), { params })
   }
+
+  async getPostComments(postId: number, params?: { page?: number; limit?: number }) {
+    return api.get<PostListResponse>(POST_API_CONSTANTS.VIEW_POST_COMMENTS(postId), { params })
+  }
 }
 
 export const postService = new PostService()

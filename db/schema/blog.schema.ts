@@ -61,11 +61,18 @@ export const comments = pgTable(
     depth: integer("depth").default(0).notNull(),
     deleted: boolean("deleted").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => [
     index("comments_post_idx").on(table.postId),
     index("comments_parent_idx").on(table.parentId),
     index("comments_author_idx").on(table.authorId),
+    index("comments_updated_idx").on(table.updatedAt),
+    index("comments_id_idx").on(table.id),
   ]
 )
 
