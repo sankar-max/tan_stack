@@ -36,6 +36,13 @@
       "when": 1769532982180,
       "tag": "0004_remarkable_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771413731383,
+      "tag": "0005_nostalgic_shadow_king",
+      "breakpoints": true
     }
   ]
 }

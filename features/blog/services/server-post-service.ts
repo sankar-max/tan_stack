@@ -132,6 +132,7 @@ export const postServiceServer = {
     postId: number
     userId?: string | null
   }) {
+
     const [post] = await db
       .select({
         id: posts.id,
@@ -311,4 +312,66 @@ export const postServiceServer = {
       totalPages: Math.ceil(total / limit),
     }
   },
+
+  async getPostComments({
+    postId,
+    page,
+    limit,
+  }: {
+    postId: number
+    page: number
+    limit: number
+  }) {
+    const offset = (page - 1) * limit
+
+    const [totalCommentsResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(comments)
+      .where(eq(comments.postId, postId))
+
+    const total = Number(totalCommentsResult?.count ?? 0)
+
+    const postComments = await db
+      .select({
+        id: comments.id,
+        content: comments.content,
+        createdAt: comments.createdAt,
+        updatedAt: comments.updatedAt,
+        author: {
+          id: user.id,
+          name: user.name,
+          image: user.image,
+        },
+      })
+      .from(comments)
+      .innerJoin(user, eq(comments.authorId, user.id))
+      .where(eq(comments.postId, postId))
+      .limit(limit)
+      .offset(offset)
+
+    return {
+      comments: postComments,
+      total,
+      totalPages: Math.ceil(total / limit),
+    }
+  },
+  async createPostComment({
+    postId,
+    userId,
+    content,
+  }: {
+    postId: number
+    userId: string
+    content: string
+  }) {
+    const [newComment] = await db
+      .insert(comments)
+      .values({
+        postId,
+        authorId: userId,
+        content,
+      })
+      .returning()
+    return newComment
+  }
 }

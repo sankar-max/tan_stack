@@ -6,4 +6,5 @@ export const postKeys = {
   bySlug: (id: string) => ["post", id] as const,
   myPosts: (userId: string) => [...postKeys.all, "by-author", userId] as const,
   likes: (postId: number) => [...postKeys.all, "likes", postId] as const,
+  comments: (postId: number) => [...postKeys.all, "comments", postId] as const,
 }
