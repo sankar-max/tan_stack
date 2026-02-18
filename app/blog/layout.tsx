@@ -14,14 +14,33 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
-export default function BlogLayout({
+import { headers } from "next/headers"
+import { auth } from "@/lib/auth"
+
+import { GlobalModal } from "@/components/blog/GlobalModal"
+
+export default async function BlogLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  const user = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+      }
+    : null
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
+      <GlobalModal />
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/40 bg-background/80 px-6 backdrop-blur-md transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-14">
           <div className="flex items-center gap-2">

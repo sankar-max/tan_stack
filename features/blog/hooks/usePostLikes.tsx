@@ -2,10 +2,11 @@ import { postService } from "@/features/blog"
 import { useQuery } from "@tanstack/react-query"
 import { postKeys } from "../utils/postKey"
 
-export const usePostLikes = () => {
+export const usePostLikes = ({ postId }: { postId: number }) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: [postKeys.likes(1)],
-    queryFn: () => postService.getPostLikes(1, { page: 1, limit: 10 }),
+    queryKey: [postKeys.likes(postId)],
+    queryFn: () => postService.getPostLikes(postId, { page: 1, limit: 10 }),
+    enabled: !!postId,
   })
 
   return { data, isLoading, error }

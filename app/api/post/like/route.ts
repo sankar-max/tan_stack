@@ -1,8 +1,11 @@
-import { getCurrentUser, requireUser } from "@/lib/requireAuth"
+import { requireUser } from "@/lib/requireAuth"
 import { zodError } from "@/lib/api/zod-error"
 import { ok, fail } from "@/lib/api/response"
 import { revalidatePath } from "next/cache"
-import { GetPostLikesSchema, LikePostSchema } from "@/features/blog/services/schema"
+import {
+  GetPostLikesSchema,
+  LikePostSchema,
+} from "@/features/blog/services/schema"
 import { postServiceServer } from "@/features/blog/services/server-post-service"
 import { parseSearchParams } from "@/lib/http"
 
@@ -17,8 +20,8 @@ export async function GET(req: Request) {
   if (!searchParams.success) {
     return zodError(searchParams.error)
   }
-  const sessionUser = await getCurrentUser(req)
-  const currentUserId = sessionUser?.id || ""
+  // const sessionUser = await getCurrentUser(req)
+  // const currentUserId = sessionUser?.id || ""
 
   const { page, limit } = searchParams.data
   try {
@@ -32,7 +35,6 @@ export async function GET(req: Request) {
     console.error("[Get Post Likes Error]:", error)
     return fail("Failed to fetch post likes", 500, "INTERNAL_SERVER_ERROR")
   }
-
 }
 
 export async function POST(req: Request) {
@@ -77,4 +79,3 @@ export async function POST(req: Request) {
     return fail("Failed to toggle like", 500, "INTERNAL_SERVER_ERROR")
   }
 }
-

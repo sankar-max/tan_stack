@@ -22,7 +22,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
-type User = {
+export type User = {
   id: string
   name: string
   email: string
@@ -68,9 +68,7 @@ export function SidebarUser({ user }: SidebarUserProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {user.name}
-                    </span>
+                    <span className="truncate font-semibold">{user.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
                       {user.email}
                     </span>
@@ -110,10 +108,7 @@ export function SidebarUser({ user }: SidebarUserProps) {
                   <Settings className="size-4" />
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="gap-2 p-2"
-                  onClick={handleSignOut}
-                >
+                <DropdownMenuItem className="gap-2 p-2" onClick={handleSignOut}>
                   <LogOut className="size-4 text-destructive" />
                   <span className="text-destructive">Log out</span>
                 </DropdownMenuItem>

@@ -1,4 +1,10 @@
-import { PostListItemsT, PostListResponse } from "../types"
+import {
+  PostCommentsResponse,
+  PostLikesResponse,
+  PostListItemsT,
+  PostListResponse,
+  Comments,
+} from "../types"
 import { api } from "@/lib/api"
 import { POST_API_CONSTANTS } from "./api-constants"
 import { AxiosRequestConfig } from "axios"
@@ -68,12 +74,33 @@ class PostService {
     return api.delete(POST_API_CONSTANTS.DELETE_POST(id), options)
   }
 
-  async getPostLikes(postId: number, params?: { page?: number; limit?: number }) {
-    return api.get<PostListResponse>(POST_API_CONSTANTS.VIEW_POST_LIKES(postId), { params })
+  async getPostLikes(
+    postId: number,
+    params?: { page?: number; limit?: number },
+  ) {
+    return api.get<PostLikesResponse>(
+      POST_API_CONSTANTS.VIEW_POST_LIKES(postId),
+      { params },
+    )
   }
 
-  async getPostComments(postId: number, params?: { page?: number; limit?: number }) {
-    return api.get<PostListResponse>(POST_API_CONSTANTS.VIEW_POST_COMMENTS(postId), { params })
+  async getPostComments(
+    postId: number,
+    params?: { page?: number; limit?: number },
+  ) {
+    const res = await api.get<PostCommentsResponse>(
+      POST_API_CONSTANTS.VIEW_POST_COMMENTS(postId),
+      { params },
+    )
+    return res.data
+  }
+
+  async createComment(postId: number, content: string) {
+    const res = await api.post<Comments>(
+      POST_API_CONSTANTS.CREATE_COMMENT(postId),
+      { content },
+    )
+    return res.data
   }
 }
 

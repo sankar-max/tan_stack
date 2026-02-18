@@ -8,6 +8,7 @@ import { motion, Variants } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostListItemsT } from "../../types"
 import { useToggleLike } from "../../hooks/useToggleLike"
+import { useModalStore } from "@/features/blog/store/modal"
 
 const item: Variants = {
   hidden: { opacity: 0, y: 15, scale: 0.98 },
@@ -29,6 +30,7 @@ interface CardProps {
 
 export function Card({ post }: CardProps) {
   const { mutate: toggleLike, isPending } = useToggleLike()
+  const { openModal } = useModalStore()
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -86,9 +88,33 @@ export function Card({ post }: CardProps) {
                       : "group-hover:scale-110"
                   }`}
                 />
-                <span>{post.totalLikes}</span>
+                <span
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    openModal("LIKE_VIEW", {
+                      title: "Likes",
+                      description: "People who liked this post",
+                      props: { postId: post.id },
+                    })
+                  }}
+                  className="cursor-pointer hover:underline"
+                >
+                  {post.totalLikes}
+                </span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground group-hover:text-primary/80 transition-colors">
+              <div
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground group-hover:text-primary/80 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  openModal("COMMENT_VIEW", {
+                    title: "Comments",
+                    description: "Join the discussion",
+                    props: { postId: post.id },
+                  })
+                }}
+              >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>{post.totalComments}</span>
               </div>
