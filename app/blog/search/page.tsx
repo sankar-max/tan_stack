@@ -29,7 +29,6 @@ export default async function SearchPage({
   }
 
   const result = await postService.getPosts({
-    page: 1,
     limit: 50,
     search: query,
   })

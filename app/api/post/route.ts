@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     return zodError(searchParams.error)
   }
 
-  const { page, limit, search, sort, order, authorId, published } =
+  const { cursor, limit, search, sort, order, authorId, published } =
     searchParams.data
 
   const sessionUser = await getCurrentUser(req)
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
 
   try {
     const result = await postServiceServer.getPosts({
-      page,
+      cursor,
       limit,
       search,
       sort,
@@ -38,10 +38,8 @@ export async function GET(req: Request) {
 
     return ok({
       posts: result.posts,
-      total: result.total,
-      page,
+      nextCursor: result.nextCursor,
       limit,
-      totalPages: result.totalPages,
     })
   } catch (error) {
     console.error("[Get Posts Error]:", error)

@@ -1,7 +1,7 @@
 import { db } from "@/db"
 import { comments, postLikes, posts } from "@/db/schema/blog.schema"
 import { user } from "@/db/schema/auth.schema"
-import { and, ilike, sql, desc, asc, eq } from "drizzle-orm"
+import { and, ilike, sql, desc, eq, lt } from "drizzle-orm"
 
 
 export const postServiceServer = {
@@ -40,36 +40,30 @@ export const postServiceServer = {
   },
 
   async getPosts({
-    page,
+    cursor,
     limit,
     search,
-    sort,
-    order,
     authorId,
     published,
     currentUserId,
   }: {
-    page: number
+    cursor?: number
     limit: number
     search?: string
-    sort: "createdAt" | "title" | "updatedAt"
-    order: "asc" | "desc"
+    sort?: "createdAt" | "title" | "updatedAt"
+    order?: "asc" | "desc"
     authorId?: string
     published?: boolean
     currentUserId?: string | null
   }) {
-    const offset = (page - 1) * limit
-
     const where = and(
       search ? ilike(posts.title, `%${search}%`) : undefined,
       authorId ? eq(posts.authorId, authorId) : undefined,
       published === true ? eq(posts.published, true) : undefined,
-      // If authorId is provided (Dashboard), show all (drafts + published) unless filtered.
-      // If no authorId (Public Feed), force published=true.
       !authorId ? eq(posts.published, true) : undefined,
+      cursor ? lt(posts.id, cursor) : undefined
     )
 
-    const orderBy = order === "asc" ? asc(posts[sort]) : desc(posts[sort])
     const userId = currentUserId
 
     const [data, totalResult] = await Promise.all([
@@ -105,9 +99,8 @@ export const postServiceServer = {
         .from(posts)
         .leftJoin(user, eq(posts.authorId, user.id))
         .where(where)
-        .limit(limit)
-        .offset(offset)
-        .orderBy(orderBy),
+        .limit(limit + 1)
+        .orderBy(desc(posts.id)),
       db
         .select({ total: sql<number>`count(*)` })
         .from(posts)
@@ -115,12 +108,14 @@ export const postServiceServer = {
     ])
 
     const total = totalResult[0]?.total || 0
+    const hasNextPage = data.length > limit
+    const postsResult = hasNextPage ? data.slice(0, limit) : data
+    const nextCursor = hasNextPage ? postsResult[postsResult.length - 1].id : null
 
     return {
-      posts: data,
+      posts: postsResult,
+      nextCursor,
       total: Number(total),
-      totalPages: Math.ceil(Number(total) / limit),
-      page,
       limit,
     }
   },
@@ -277,84 +272,102 @@ export const postServiceServer = {
 
   async getPostLikes({
     postId,
-    page,
+    cursor,
     limit,
   }: {
     postId: number
-    page: number
+    cursor?: string
     limit: number
   }) {
-    const offset = (page - 1) * limit
+    const where = and(
+      eq(postLikes.postId, postId),
+      cursor ? lt(postLikes.createdAt, new Date(cursor)) : undefined
+    )
 
-    const [totalLikesResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(postLikes)
-      .where(eq(postLikes.postId, postId))
+    const [users, totalResult] = await Promise.all([
+      db
+        .select({
+          id: user.id,
+          name: user.name,
+          image: user.image,
+          email: user.email,
+          createdAt: postLikes.createdAt,
+        })
+        .from(postLikes)
+        .innerJoin(user, eq(postLikes.userId, user.id))
+        .where(where)
+        .limit(limit + 1)
+        .orderBy(desc(postLikes.createdAt)),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(postLikes)
+        .where(eq(postLikes.postId, postId)),
+    ])
 
-    const total = Number(totalLikesResult?.count ?? 0)
+    const total = Number(totalResult[0]?.count ?? 0)
 
-    const users = await db
-      .select({
-        id: user.id,
-        name: user.name,
-        image: user.image,
-        email: user.email,
-      })
-      .from(postLikes)
-      .innerJoin(user, eq(postLikes.userId, user.id))
-      .where(eq(postLikes.postId, postId))
-      .limit(limit)
-      .offset(offset)
+    const hasNextPage = users.length > limit
+    const usersResult = hasNextPage ? users.slice(0, limit) : users
+    const nextCursor = hasNextPage ? usersResult[usersResult.length - 1].createdAt.toISOString() : null
 
     return {
-      users,
+      users: usersResult,
+      nextCursor,
       total,
-      totalPages: Math.ceil(total / limit),
     }
   },
 
   async getPostComments({
     postId,
-    page,
+    cursor,
     limit,
   }: {
     postId: number
-    page: number
+    cursor?: number
     limit: number
   }) {
-    const offset = (page - 1) * limit
+    const where = and(
+      eq(comments.postId, postId),
+      cursor ? lt(comments.id, cursor) : undefined
+    )
 
-    const [totalCommentsResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(comments)
-      .where(eq(comments.postId, postId))
+    const [postComments, totalResult] = await Promise.all([
+      db
+        .select({
+          id: comments.id,
+          content: comments.content,
+          createdAt: comments.createdAt,
+          updatedAt: comments.updatedAt,
+          author: {
+            id: user.id,
+            name: user.name,
+            image: user.image,
+          },
+        })
+        .from(comments)
+        .innerJoin(user, eq(comments.authorId, user.id))
+        .where(where)
+        .limit(limit + 1)
+        .orderBy(desc(comments.id)),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(comments)
+        .where(eq(comments.postId, postId)),
+    ])
 
-    const total = Number(totalCommentsResult?.count ?? 0)
+    const total = Number(totalResult[0]?.count ?? 0)
 
-    const postComments = await db
-      .select({
-        id: comments.id,
-        content: comments.content,
-        createdAt: comments.createdAt,
-        updatedAt: comments.updatedAt,
-        author: {
-          id: user.id,
-          name: user.name,
-          image: user.image,
-        },
-      })
-      .from(comments)
-      .innerJoin(user, eq(comments.authorId, user.id))
-      .where(eq(comments.postId, postId))
-      .limit(limit)
-      .offset(offset)
+    const hasNextPage = postComments.length > limit
+    const commentsResult = hasNextPage ? postComments.slice(0, limit) : postComments
+    const nextCursor = hasNextPage ? commentsResult[commentsResult.length - 1].id : null
 
     return {
-      comments: postComments,
+      comments: commentsResult,
+      nextCursor,
       total,
-      totalPages: Math.ceil(total / limit),
     }
   },
+
   async createPostComment({
     postId,
     userId,

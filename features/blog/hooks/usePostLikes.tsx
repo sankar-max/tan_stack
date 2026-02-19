@@ -1,13 +1,14 @@
 import { postService } from "@/features/blog"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { postKeys } from "../utils/postKey"
 
 export const usePostLikes = ({ postId }: { postId: number }) => {
-  const { data, isLoading, error } = useQuery({
+  return useInfiniteQuery({
     queryKey: [postKeys.likes(postId)],
-    queryFn: () => postService.getPostLikes(postId, { page: 1, limit: 10 }),
+    queryFn: ({ pageParam }) =>
+      postService.getPostLikes(postId, { cursor: pageParam, limit: 10 }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.data.nextCursor ?? undefined,
     enabled: !!postId,
   })
-
-  return { data, isLoading, error }
 }

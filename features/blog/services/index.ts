@@ -13,7 +13,7 @@ class PostService {
   async getPosts(
     params?: {
       search?: string
-      page?: number
+      cursor?: number
       limit?: number
       authorId?: string
       published?: boolean
@@ -76,7 +76,7 @@ class PostService {
 
   async getPostLikes(
     postId: number,
-    params?: { page?: number; limit?: number },
+    params?: { cursor?: string; limit?: number },
   ) {
     return api.get<PostLikesResponse>(
       POST_API_CONSTANTS.VIEW_POST_LIKES(postId),
@@ -86,7 +86,7 @@ class PostService {
 
   async getPostComments(
     postId: number,
-    params?: { page?: number; limit?: number },
+    params?: { cursor?: number; limit?: number },
   ) {
     const res = await api.get<PostCommentsResponse>(
       POST_API_CONSTANTS.VIEW_POST_COMMENTS(postId),

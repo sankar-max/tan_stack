@@ -18,7 +18,7 @@ export async function generateStaticParams() {
   try {
     const result = await postServiceServer.getPosts({
       limit: 100,
-      page: 1,
+      cursor: undefined,
       sort: "createdAt",
       order: "desc",
       published: true,

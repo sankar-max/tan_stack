@@ -1,10 +1,13 @@
 import { postService } from "@/features/blog"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 
-export function usePostComments({ postId = 1, page = 1, limit = 10 }: { postId: number; page?: number; limit?: number }) {
- const { data, isLoading, error } = useQuery({
-  queryKey: ["post-comments", postId, page, limit],
-  queryFn: () => postService.getPostComments(postId, { page, limit }),
+export function usePostComments({ postId, limit = 10 }: { postId: number; limit?: number }) {
+ return useInfiniteQuery({
+  queryKey: ["post-comments", postId, limit],
+  queryFn: ({ pageParam }) =>
+   postService.getPostComments(postId, { cursor: pageParam, limit }),
+  initialPageParam: undefined as number | undefined,
+  getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  enabled: !!postId,
  })
- return { data, isLoading, error }
 }

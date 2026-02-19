@@ -12,10 +12,9 @@ export type PostListItemsT = typeof posts.$inferSelect & {
 }
 export type PostListResponse = {
   posts: PostListItemsT[]
-  total: number
-  page: number
+  nextCursor?: number | null
+  total?: number
   limit: number
-  totalPages: number
 }
 
 export type User = {
@@ -26,14 +25,14 @@ export type User = {
 }
 export type PostLikesResponse = {
   users: User[]
-  total: number
-  totalPages: number
+  nextCursor?: string | null
+  total?: number
 }
 
 export type PostCommentsResponse = {
   comments: Comments[]
-  total: number
-  totalPages: number
+  nextCursor?: number | null
+  total?: number
 }
 
 export type Comments = {

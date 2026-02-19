@@ -22,9 +22,14 @@ export default async function PostsPage() {
 
   const queryClient = new QueryClient()
 
-  await queryClient.prefetchQuery({
+  await queryClient.prefetchInfiniteQuery({
     queryKey: postKeys.myPosts(session.user.id),
-    queryFn: () => postService.getPosts({ authorId: session.user.id }),
+    queryFn: ({ pageParam }) =>
+      postService.getPosts({
+        authorId: session.user.id,
+        cursor: pageParam as unknown as number,
+      }),
+    initialPageParam: undefined,
   })
 
   return (

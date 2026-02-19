@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { postService, postKeys } from "@/features/blog"
 import {
   Card,
@@ -24,6 +24,7 @@ import { FileText, MoreHorizontal } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { DeletePostDialog } from "./DeletePostDialog"
+import { InfiniteScrollTrigger } from "./InfiniteScrollTrigger"
 
 interface PostListProps {
   userId: string
@@ -31,12 +32,22 @@ interface PostListProps {
 }
 
 export function PostList({ userId }: PostListProps) {
-  const { data, isLoading, isError } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: postKeys.myPosts(userId),
-    queryFn: () => postService.getPosts({ authorId: userId }),
+    queryFn: ({ pageParam }) =>
+      postService.getPosts({ authorId: userId, cursor: pageParam }),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.data.nextCursor ?? undefined,
   })
 
-  const posts = data?.data.posts || []
+  const posts = data?.pages.flatMap((page) => page.data.posts) || []
 
   if (isLoading) {
     return (
@@ -140,6 +151,11 @@ export function PostList({ userId }: PostListProps) {
           </CardFooter>
         </Card>
       ))}
+      <InfiniteScrollTrigger
+        onIntersect={() => fetchNextPage()}
+        isEnabled={!!hasNextPage}
+        isFetching={isFetchingNextPage}
+      />
     </div>
   )
 }

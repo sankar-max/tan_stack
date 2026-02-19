@@ -23,11 +23,11 @@ export async function GET(req: Request) {
   // const sessionUser = await getCurrentUser(req)
   // const currentUserId = sessionUser?.id || ""
 
-  const { page, limit } = searchParams.data
+  const { limit } = searchParams.data
   try {
     const result = await postServiceServer.getPostLikes({
       postId: 2,
-      page,
+
       limit,
     })
     return ok(result, "Post likes fetched successfully", 200)

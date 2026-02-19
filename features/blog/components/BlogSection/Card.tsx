@@ -4,25 +4,10 @@ import React from "react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { ArrowRight, Heart, MessageCircle } from "lucide-react"
-import { motion, Variants } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostListItemsT } from "../../types"
 import { useToggleLike } from "../../hooks/useToggleLike"
 import { useModalStore } from "@/features/blog/store/modal"
-
-const item: Variants = {
-  hidden: { opacity: 0, y: 15, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.5,
-      delay: 0.1,
-      ease: "easeOut",
-    },
-  },
-}
 
 interface CardProps {
   post: PostListItemsT
@@ -40,9 +25,9 @@ export function Card({ post }: CardProps) {
   }
 
   return (
-    <motion.div variants={item}>
+    <div className="h-full">
       <Link href={`/blog/${post.id}`} className="group block h-full">
-        <article className="flex flex-col h-full bg-card rounded-2xl border border-border/40 hover:border-primary/20 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 overflow-hidden relative">
+        <article className="flex flex-col h-full bg-card rounded-2xl border border-border/40 hover:border-primary/20 transition-all duration-300 hover:shadow-lg overflow-hidden relative">
           {/* Gradient Overlay on Hover */}
           <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -75,7 +60,7 @@ export function Card({ post }: CardProps) {
             <div className="flex items-center gap-4 mt-auto">
               <div
                 onClick={handleLike}
-                className={`flex items-center gap-1.5 text-xs font-medium transition-all duration-300 cursor-pointer hover:scale-110 active:scale-95 ${
+                className={`flex items-center gap-1.5 text-xs font-medium transition-colors duration-300 cursor-pointer ${
                   post.isLiked
                     ? "text-red-500"
                     : "text-muted-foreground hover:text-red-400"
@@ -83,9 +68,7 @@ export function Card({ post }: CardProps) {
               >
                 <Heart
                   className={`w-3.5 h-3.5 transition-all duration-300 ${
-                    post.isLiked
-                      ? "fill-current scale-110"
-                      : "group-hover:scale-110"
+                    post.isLiked ? "fill-current" : ""
                   }`}
                 />
                 <span
@@ -118,13 +101,13 @@ export function Card({ post }: CardProps) {
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>{post.totalComments}</span>
               </div>
-              <div className="flex items-center text-xs font-medium text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+              <div className="flex items-center text-xs font-medium text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300">
                 Read Story <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </div>
             </div>
           </div>
         </article>
       </Link>
-    </motion.div>
+    </div>
   )
 }

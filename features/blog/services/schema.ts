@@ -17,7 +17,7 @@ export type CreatePostInput = z.infer<typeof CreatePostSchema>
 
 export const PostQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(50).default(10),
-  page: z.coerce.number().min(1).default(1),
+  cursor: z.coerce.number().optional(),
   search: z.string().optional(),
   authorId: z.string().optional(),
   sort: z.enum(["createdAt", "updatedAt", "title"]).default("createdAt"),
@@ -29,7 +29,7 @@ export const PostQuerySchema = z.object({
 })
 
 export const GetPostLikesSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
+  cursor: z.string().optional(), // Using ISO date string for createdAt cursor
   limit: z.coerce.number().int().min(1).max(100).default(10),
 })
 
@@ -45,9 +45,9 @@ export const LikePostSchema = z.object({
 
 export type LikePostInput = z.infer<typeof LikePostSchema>
 
-export const GetPostLikesQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
+export const GetPostCommentsSchema = z.object({
+  cursor: z.coerce.number().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(10),
 })
 
-export type GetPostLikesQueryInput = z.infer<typeof GetPostLikesQuerySchema>
+export type GetPostCommentsQueryInput = z.infer<typeof GetPostCommentsSchema>

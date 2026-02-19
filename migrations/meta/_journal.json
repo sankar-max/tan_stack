@@ -43,6 +43,13 @@
       "when": 1771413731383,
       "tag": "0005_nostalgic_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771479317205,
+      "tag": "0006_brainy_orphan",
+      "breakpoints": true
     }
   ]
 }

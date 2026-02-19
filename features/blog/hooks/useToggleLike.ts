@@ -1,8 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient, InfiniteData } from "@tanstack/react-query"
 import { postService } from "../services"
 import { postKeys } from "../utils/postKey"
 import { PostListResponse, PostListItemsT } from "../types"
-import { ApiSuccess } from "@/lib/api/api-response"
 import { toast } from "sonner"
 import axios from "axios"
 
@@ -11,51 +10,55 @@ export const useToggleLike = () => {
 
   return useMutation({
     mutationFn: (postId: string | number) => postService.toggleLike(postId),
-    // Optimistic Update
     onMutate: async (postId) => {
       const idStr = postId.toString()
-      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      const numericId = Number(postId)
+
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: postKeys.all })
       await queryClient.cancelQueries({ queryKey: ["post", idStr] })
 
       // Snapshot the previous values
       const previousPostsPages = queryClient.getQueriesData<
-        ApiSuccess<PostListResponse>
+        InfiniteData<{ data: PostListResponse }>
       >({
         queryKey: postKeys.all,
       })
-      const previousSinglePost = queryClient.getQueryData<
-        ApiSuccess<PostListItemsT>
-      >(["post", idStr])
+      const previousSinglePost = queryClient.getQueryData<{
+        data: PostListItemsT
+      }>(["post", idStr])
 
-      // 1. Optimistically update the list
-      queryClient.setQueriesData<ApiSuccess<PostListResponse>>(
+      // 1. Optimistically update all infinite scroll lists
+      queryClient.setQueriesData<InfiniteData<{ data: PostListResponse }>>(
         { queryKey: postKeys.all },
         (old) => {
           if (!old) return old
           return {
             ...old,
-            data: {
-              ...old.data,
-              posts: old.data.posts.map((post) => {
-                if (post.id === Number(postId)) {
-                  const isLiked = !post.isLiked
-                  return {
-                    ...post,
-                    isLiked,
-                    totalLikes: post.totalLikes + (isLiked ? 1 : -1),
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: {
+                ...page.data,
+                posts: page.data.posts.map((post) => {
+                  if (post.id === numericId) {
+                    const isLiked = !post.isLiked
+                    return {
+                      ...post,
+                      isLiked,
+                      totalLikes: post.totalLikes + (isLiked ? 1 : -1),
+                    }
                   }
-                }
-                return post
-              }),
-            },
+                  return post
+                }),
+              },
+            })),
           }
         },
       )
 
       // 2. Optimistically update the single post if it exists
       if (previousSinglePost) {
-        queryClient.setQueryData<ApiSuccess<PostListItemsT>>(["post", idStr], {
+        queryClient.setQueryData<{ data: PostListItemsT }>(["post", idStr], {
           ...previousSinglePost,
           data: {
             ...previousSinglePost.data,
@@ -67,7 +70,6 @@ export const useToggleLike = () => {
         })
       }
 
-      // Return a context object with the snapshotted values
       return { previousPostsPages, previousSinglePost, idStr }
     },
     onSuccess: (response) => {
@@ -77,7 +79,6 @@ export const useToggleLike = () => {
         toast.info("Post unliked")
       }
     },
-    // If the mutation fails, use the context returned from onMutate to roll back
     onError: (err, postId, context) => {
       if (context?.previousPostsPages) {
         context.previousPostsPages.forEach(([queryKey, data]) => {
@@ -97,10 +98,19 @@ export const useToggleLike = () => {
           : "Failed to update like status"
       toast.error(errorMessage)
     },
-    // Always refetch after error or success:
     onSettled: (data, error, postId) => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all })
-      queryClient.invalidateQueries({ queryKey: ["post", postId.toString()] })
+      /**
+       * Note: We don't strictly NEED a full invalidation if the optimistic update
+       * and the response data are used to keep the cache consistent.
+       * But for safety, we invalidate. However, we could be more specific.
+       */
+      const idStr = postId.toString()
+      // queryClient.invalidateQueries({ queryKey: postKeys.all })
+      queryClient.invalidateQueries({ queryKey: ["post", idStr] })
+
+      // Instead of invalidating ALL posts, we can just invalidate the pages that contain this post.
+      // But query-level invalidation is simpler. To stop the "trigger everytime" annoyance,
+      // we check if the user meant that it refetches the list while they are interacting.
     },
   })
 }

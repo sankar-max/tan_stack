@@ -4,6 +4,7 @@ import { usePostLikes } from "../../hooks/usePostLikes"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { InfiniteScrollTrigger } from "../InfiniteScrollTrigger"
 
 type Props = {
   postId: number
@@ -11,10 +12,16 @@ type Props = {
 
 function LikeView({ postId }: Props) {
   const {
-    data: likes,
+    data: infiniteLikes,
     isLoading: likesLoading,
     error: likesError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = usePostLikes({ postId })
+
+  const likes = infiniteLikes?.pages.flatMap((page) => page.data.users) || []
+  const totalLikes = infiniteLikes?.pages[0]?.data.total || 0
 
   if (likesLoading) {
     return (
@@ -40,7 +47,7 @@ function LikeView({ postId }: Props) {
     )
   }
 
-  if (!likes?.data?.users?.length) {
+  if (likes.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-muted-foreground">
         No likes yet. Be the first to like this post!
@@ -51,12 +58,11 @@ function LikeView({ postId }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="text-sm font-medium text-muted-foreground">
-        {likes.data.total} {likes.data.total === 1 ? "person" : "people"} liked
-        this
+        {totalLikes} {totalLikes === 1 ? "person" : "people"} liked this
       </div>
       <ScrollArea className="h-[300px] pr-4">
         <div className="flex flex-col gap-4">
-          {likes.data.users.map((user) => (
+          {likes.map((user) => (
             <div key={user.id} className="flex items-center gap-3">
               <Avatar>
                 <AvatarImage src={user.image || undefined} alt={user.name} />
@@ -72,6 +78,11 @@ function LikeView({ postId }: Props) {
               </div>
             </div>
           ))}
+          <InfiniteScrollTrigger
+            onIntersect={() => fetchNextPage()}
+            isEnabled={!!hasNextPage}
+            isFetching={isFetchingNextPage}
+          />
         </div>
       </ScrollArea>
     </div>

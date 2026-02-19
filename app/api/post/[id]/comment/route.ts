@@ -1,5 +1,5 @@
 import { postServiceServer } from "@/features/blog/server"
-import { GetPostLikesSchema } from "@/features/blog/services/schema"
+import { GetPostCommentsSchema } from "@/features/blog/services/schema"
 import { fail, ok } from "@/lib/api/response"
 import { zodError } from "@/lib/api/zod-error"
 import { parseSearchParams } from "@/lib/http"
@@ -14,17 +14,17 @@ export async function GET(
   if (!postId) {
     return fail("Post ID is required", 400, "BAD_REQUEST")
   }
-  const searchParams = parseSearchParams(req, GetPostLikesSchema)
+  const searchParams = parseSearchParams(req, GetPostCommentsSchema)
   if (!searchParams.success) {
     return zodError(searchParams.error)
   }
   // const sessionUser = await getCurrentUser(req)
   // const currentUserId = sessionUser?.id || ""
-  const { page, limit } = searchParams.data
+  const { cursor, limit } = searchParams.data
   try {
     const res = await postServiceServer.getPostComments({
       postId: +postId,
-      page,
+      cursor,
       limit,
     })
 

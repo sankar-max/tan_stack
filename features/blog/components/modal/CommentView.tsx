@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { postService } from "../../services"
 import { formatDistanceToNow } from "date-fns"
 import { Loader2, Send } from "lucide-react"
+import { InfiniteScrollTrigger } from "../InfiniteScrollTrigger"
 
 type Props = {
   postId: number
@@ -21,9 +22,12 @@ function CommentView({ postId }: Props) {
   const queryClient = useQueryClient()
 
   const {
-    data: comments,
+    data: infiniteComments,
     isLoading: commentsLoading,
     error: commentsError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = usePostComments({ postId: postId! })
 
   const { mutate: createComment, isPending: isCreating } = useMutation({
@@ -34,6 +38,9 @@ function CommentView({ postId }: Props) {
       setContent("")
     },
   })
+
+  const comments =
+    infiniteComments?.pages.flatMap((page) => page.comments) || []
 
   if (!postId) return null
 
@@ -62,14 +69,14 @@ function CommentView({ postId }: Props) {
           <div className="p-4 text-center text-sm text-red-500">
             Error loading comments. Please try again.
           </div>
-        ) : !comments?.comments?.length ? (
+        ) : comments.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             No comments yet. Be the first to share your thoughts!
           </div>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
             <div className="flex flex-col gap-6">
-              {comments.comments.map((comment) => (
+              {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarImage
@@ -97,6 +104,11 @@ function CommentView({ postId }: Props) {
                   </div>
                 </div>
               ))}
+              <InfiniteScrollTrigger
+                onIntersect={() => fetchNextPage()}
+                isEnabled={!!hasNextPage}
+                isFetching={isFetchingNextPage}
+              />
             </div>
           </ScrollArea>
         )}
