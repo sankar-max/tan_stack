@@ -4,7 +4,7 @@ import { postKeys } from "../utils/postKey"
 
 export const usePublicPosts = (search: string = "") => {
   return useInfiniteQuery({
-    queryKey: [...postKeys.publicLatest(12), ""],
+    queryKey: [...postKeys.publicLatest(12), search],
     queryFn: ({ pageParam }) =>
       postService.getPosts({ search, limit: 12, cursor: pageParam }),
     initialPageParam: undefined as number | undefined,

@@ -21,6 +21,8 @@ function BlogSection() {
     isFetchingNextPage,
   } = usePublicPosts(debouncedQuery)
 
+  console.log(result, "result")
+
   const isSearching = debouncedQuery.length > 0
 
   const posts = result?.pages.flatMap((page) => page.data.posts) || []

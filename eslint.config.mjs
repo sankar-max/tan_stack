@@ -14,7 +14,6 @@ const eslintConfig = [
       "no-unused-vars": "off",
       "@typescript-eslint/no-empty-object-type": "error",
       "prefer-const": "error",
-      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
   // Override default ignores of eslint-config-next.

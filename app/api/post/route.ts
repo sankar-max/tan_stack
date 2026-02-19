@@ -3,7 +3,6 @@ import { zodError } from "@/lib/api/zod-error"
 import { ok, fail } from "@/lib/api/response"
 import { revalidatePath } from "next/cache"
 
-
 // schema
 import {
   CreatePostSchema,
@@ -37,9 +36,7 @@ export async function GET(req: Request) {
     })
 
     return ok({
-      posts: result.posts,
-      nextCursor: result.nextCursor,
-      limit,
+      ...result,
     })
   } catch (error) {
     console.error("[Get Posts Error]:", error)
