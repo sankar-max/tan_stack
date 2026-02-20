@@ -42,7 +42,8 @@ export async function PUT(req: Request) {
       data: validatedData.data,
     })
     return ok(updatedUser, "User updated successfully", 200)
-  } catch {
+  } catch (error) {
+    console.log("error", error)
     return fail("Failed to update user", 500, "INTERNAL_SERVER_ERROR")
   }
 }

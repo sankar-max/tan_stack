@@ -31,36 +31,51 @@ export async function updateUser({
 }) {
   const { name, image, ...profileData } = data
 
-  await db.transaction(async (tx) => {
-    if (name || image) {
-      await tx
+  const queries = []
+
+  if (name || image) {
+    queries.push(
+      db
         .update(user)
         .set({
           ...(name ? { name } : {}),
           ...(image ? { image } : {}),
+          updatedAt: new Date(),
         })
-        .where(eq(user.id, userId))
-    }
+        .where(eq(user.id, userId)),
+    )
+  }
 
-    if (Object.keys(profileData).length > 0) {
-      // Check if profile exists
-      const existingProfile = await tx.query.userProfile.findFirst({
-        where: eq(userProfile.userId, userId),
-      })
-
-      if (existingProfile) {
-        await tx
-          .update(userProfile)
-          .set(profileData)
-          .where(eq(userProfile.userId, userId))
-      } else {
-        await tx.insert(userProfile).values({
+  if (Object.keys(profileData).length > 0) {
+    queries.push(
+      db
+        .insert(userProfile)
+        .values({
           userId,
           ...profileData,
+          updatedAt: new Date(),
         })
-      }
-    }
+        .onConflictDoUpdate({
+          target: userProfile.userId,
+          set: {
+            ...profileData,
+            updatedAt: new Date(),
+          },
+        }),
+    )
+  }
+
+  // Add the final fetch to the batch to perform everything in one round-trip
+  const fetchQuery = db.query.user.findFirst({
+    where: eq(user.id, userId),
+    with: {
+      profile: true,
+    },
   })
 
-  return getUser({ userId })
+  // @ts-ignore - Drizzle batch types can be strict with mixed return types
+  const results = await db.batch([...queries, fetchQuery])
+
+  // The last result is our user data
+  return results[results.length - 1] as Awaited<ReturnType<typeof getUser>>
 }
