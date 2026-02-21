@@ -31,7 +31,9 @@ export async function updateUser({
 }) {
   const { name, image, ...profileData } = data
 
-  const queries = []
+  const queries: {
+    readonly _: { readonly dialect: "pg"; readonly result: unknown }
+  }[] = []
 
   if (name || image) {
     queries.push(
@@ -73,9 +75,10 @@ export async function updateUser({
     },
   })
 
-  // @ts-ignore - Drizzle batch types can be strict with mixed return types
-  const results = await db.batch([...queries, fetchQuery])
+  const results = await db.batch([...queries, fetchQuery] as unknown as [
+    { readonly _: { readonly dialect: "pg"; readonly result: unknown } },
+    ...{ readonly _: { readonly dialect: "pg"; readonly result: unknown } }[],
+  ])
 
-  // The last result is our user data
   return results[results.length - 1] as Awaited<ReturnType<typeof getUser>>
 }

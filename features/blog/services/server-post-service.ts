@@ -1,12 +1,10 @@
 import { db } from "@/db"
-import { comments, postLikes, posts } from "@/db/schema/blog.schema"
+import { comments, follows, postLikes, posts } from "@/db/schema/blog.schema"
 import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, eq, lt } from "drizzle-orm"
 
-
 export const postServiceServer = {
-
-  async getPostBySlug(slug: string) {
+  async getPostBySlug(slug: string, currentUserId?: string | null) {
     const [post] = await db
       .select({
         id: posts.id,
@@ -30,6 +28,13 @@ export const postServiceServer = {
           sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(
             Number,
           ),
+        isFollowing: currentUserId
+          ? sql<boolean>`EXISTS (select 1 from ${follows} where ${follows.followerId} = ${currentUserId} and ${follows.followingId} = ${posts.authorId})`.mapWith(
+              Boolean,
+            )
+          : sql<boolean>`false`.mapWith(
+              (val) => val === true || val === "t" || val === 1,
+            ),
       })
       .from(posts)
       .leftJoin(user, eq(posts.authorId, user.id))
@@ -61,7 +66,7 @@ export const postServiceServer = {
       authorId ? eq(posts.authorId, authorId) : undefined,
       published === true ? eq(posts.published, true) : undefined,
       !authorId ? eq(posts.published, true) : undefined,
-      cursor ? lt(posts.id, cursor) : undefined
+      cursor ? lt(posts.id, cursor) : undefined,
     )
 
     const userId = currentUserId
@@ -93,8 +98,19 @@ export const postServiceServer = {
               Number,
             ),
           isLiked: userId
-            ? sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`
-            : sql<boolean>`false`,
+            ? sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`.mapWith(
+                Boolean,
+              )
+            : sql<boolean>`false`.mapWith(
+                (val) => val === true || val === "t" || val === 1,
+              ),
+          isFollowing: userId
+            ? sql<boolean>`EXISTS (select 1 from ${follows} where ${follows.followerId} = ${userId} and ${follows.followingId} = ${posts.authorId})`.mapWith(
+                Boolean,
+              )
+            : sql<boolean>`false`.mapWith(
+                (val) => val === true || val === "t" || val === 1,
+              ),
         })
         .from(posts)
         .leftJoin(user, eq(posts.authorId, user.id))
@@ -110,7 +126,9 @@ export const postServiceServer = {
     const total = totalResult[0]?.total || 0
     const hasNextPage = data.length > limit
     const postsResult = hasNextPage ? data.slice(0, limit) : data
-    const nextCursor = hasNextPage ? postsResult[postsResult.length - 1].id : null
+    const nextCursor = hasNextPage
+      ? postsResult[postsResult.length - 1].id
+      : null
 
     return {
       posts: postsResult,
@@ -127,7 +145,6 @@ export const postServiceServer = {
     postId: number
     userId?: string | null
   }) {
-
     const [post] = await db
       .select({
         id: posts.id,
@@ -152,8 +169,19 @@ export const postServiceServer = {
             Number,
           ),
         isLiked: userId
-          ? sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`
-          : sql<boolean>`false`,
+          ? sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`.mapWith(
+              Boolean,
+            )
+          : sql<boolean>`false`.mapWith(
+              (val) => val === true || val === "t" || val === 1,
+            ),
+        isFollowing: userId
+          ? sql<boolean>`EXISTS (select 1 from ${follows} where ${follows.followerId} = ${userId} and ${follows.followingId} = ${posts.authorId})`.mapWith(
+              Boolean,
+            )
+          : sql<boolean>`false`.mapWith(
+              (val) => val === true || val === "t" || val === 1,
+            ),
       })
       .from(posts)
       .leftJoin(user, eq(posts.authorId, user.id))
@@ -235,10 +263,10 @@ export const postServiceServer = {
     const dbResult = await db.execute(query)
     const stats = dbResult.rows?.[0] as
       | {
-        postExists: boolean
-        isLiked: boolean
-        totalLikes: number
-      }
+          postExists: boolean
+          isLiked: boolean
+          totalLikes: number
+        }
       | undefined
 
     return stats
@@ -281,7 +309,7 @@ export const postServiceServer = {
   }) {
     const where = and(
       eq(postLikes.postId, postId),
-      cursor ? lt(postLikes.createdAt, new Date(cursor)) : undefined
+      cursor ? lt(postLikes.createdAt, new Date(cursor)) : undefined,
     )
 
     const [users, totalResult] = await Promise.all([
@@ -308,7 +336,9 @@ export const postServiceServer = {
 
     const hasNextPage = users.length > limit
     const usersResult = hasNextPage ? users.slice(0, limit) : users
-    const nextCursor = hasNextPage ? usersResult[usersResult.length - 1].createdAt.toISOString() : null
+    const nextCursor = hasNextPage
+      ? usersResult[usersResult.length - 1].createdAt.toISOString()
+      : null
 
     return {
       users: usersResult,
@@ -328,7 +358,7 @@ export const postServiceServer = {
   }) {
     const where = and(
       eq(comments.postId, postId),
-      cursor ? lt(comments.id, cursor) : undefined
+      cursor ? lt(comments.id, cursor) : undefined,
     )
 
     const [postComments, totalResult] = await Promise.all([
@@ -358,8 +388,12 @@ export const postServiceServer = {
     const total = Number(totalResult[0]?.count ?? 0)
 
     const hasNextPage = postComments.length > limit
-    const commentsResult = hasNextPage ? postComments.slice(0, limit) : postComments
-    const nextCursor = hasNextPage ? commentsResult[commentsResult.length - 1].id : null
+    const commentsResult = hasNextPage
+      ? postComments.slice(0, limit)
+      : postComments
+    const nextCursor = hasNextPage
+      ? commentsResult[commentsResult.length - 1].id
+      : null
 
     return {
       comments: commentsResult,
@@ -386,5 +420,5 @@ export const postServiceServer = {
       })
       .returning()
     return newComment
-  }
+  },
 }

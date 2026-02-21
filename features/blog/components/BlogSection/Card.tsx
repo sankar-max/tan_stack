@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostListItemsT } from "../../types"
 import { useToggleLike } from "../../hooks/useToggleLike"
 import { useModalStore } from "@/features/blog/store/modal"
+import { FollowButton } from "../FollowButton"
 
 interface CardProps {
   post: PostListItemsT
@@ -47,6 +48,10 @@ export function Card({ post }: CardProps) {
               <span className="text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">
                 {format(new Date(post.createdAt), "MMM d")}
               </span>
+              <FollowButton
+                userId={post.author!.id}
+                isFollowing={post.isFollowing}
+              />
             </div>
 
             <h3 className="text-xl font-bold tracking-tight text-foreground mb-3 leading-tight group-hover:text-primary transition-colors duration-300">
