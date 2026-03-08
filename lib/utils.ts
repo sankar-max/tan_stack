@@ -16,13 +16,14 @@ export function getBaseUrl() {
   }
 
   // Server-side
-  if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) return process.env.NEXT_PUBLIC_BETTER_AUTH_URL
+  if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL)
+    return process.env.NEXT_PUBLIC_BETTER_AUTH_URL
   if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL
   if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL
-  
+
   // VERCEL_URL is available in Vercel environment
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  
+
   // Default for local development
   return "http://localhost:3000"
 }

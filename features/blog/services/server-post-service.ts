@@ -2,6 +2,7 @@ import { db } from "@/db"
 import { comments, follows, postLikes, posts } from "@/db/schema/blog.schema"
 import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, eq, lt } from "drizzle-orm"
+import z from "zod"
 
 export const postServiceServer = {
   async getPostBySlug(slug: string, currentUserId?: string | null) {
@@ -191,19 +192,14 @@ export const postServiceServer = {
     return post
   },
 
-  async createPost({
-    title,
-    content,
-    excerpt,
-    published,
-    authorId,
-  }: {
-    title: string
-    content: string
-    excerpt?: string
-    published: boolean
-    authorId: string
-  }) {
+  async createPost(input: z.infer<typeof createPostSchema>) {
+    const validatedData = createPostSchema.safeParse(input)
+
+    if (!validatedData.success) {
+      throw new Error("Invalid data")
+    }
+    const { title, content, excerpt, published, authorId } = validatedData.data
+
     // Simple slug generation
     const slug =
       title
@@ -422,3 +418,11 @@ export const postServiceServer = {
     return newComment
   },
 }
+
+const createPostSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  excerpt: z.string().optional(),
+  published: z.boolean(),
+  authorId: z.string(),
+})
