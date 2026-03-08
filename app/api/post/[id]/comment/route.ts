@@ -7,7 +7,7 @@ import { getCurrentUser, requireUser } from "@/lib/requireAuth"
 
 export async function GET(
   req: Request,
-  { params }: RouteContext<"/api/post/[id]/comment">,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   await requireUser(req)
   const { id: postId } = await params
@@ -36,7 +36,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: RouteContext<"/api/post/[id]/comment">,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   await requireUser(req)
   const { id: postId } = await params

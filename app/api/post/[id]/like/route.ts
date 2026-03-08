@@ -12,7 +12,7 @@ import { parseSearchParams } from "@/lib/http"
 // get post likes and user list
 export async function GET(
   req: Request,
-  { params }: RouteContext<"/api/post/[id]/like">,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const authResult = await requireUser(req)
 
