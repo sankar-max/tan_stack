@@ -4,11 +4,14 @@ import { EditorContent, useEditor, type JSONContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import Image from "@tiptap/extension-image"
-import { useImperativeHandle, forwardRef, useCallback, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { ImageIcon, FileText, Loader2 } from "lucide-react"
+import { useImperativeHandle, forwardRef, useCallback, useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import {
+  Bold, Italic, Strikethrough, Code, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6,
+  List, ListOrdered, Quote, Minus, Undo, Redo,
+  ImageIcon, FileText, Loader2, Code2, Type, Eraser
+} from "lucide-react"
 
 interface TipTapEditorProps {
   content?: string
@@ -19,16 +22,55 @@ export interface TipTapEditorRef {
   getJSON: () => JSONContent | undefined
 }
 
+type ToolbarButtonProps = {
+  onClick: () => void
+  active?: boolean
+  disabled?: boolean
+  title: string
+  children: React.ReactNode
+}
+
+function ToolbarButton({ onClick, active, disabled, title, children }: ToolbarButtonProps) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        inline-flex items-center justify-center w-8 h-8 rounded-md text-sm
+        transition-all duration-150 cursor-pointer select-none
+        disabled:opacity-30 disabled:cursor-not-allowed
+        ${active
+          ? "bg-foreground text-background shadow-sm"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+        }
+      `}
+    >
+      {children}
+    </button>
+  )
+}
+
+function ToolbarDivider() {
+  return <div className="w-px h-5 bg-border/60 mx-1 self-center flex-shrink-0" />
+}
+
 const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
   ({ content = "" }, ref) => {
     const [isUploading, setIsUploading] = useState(false)
+    const [stats, setStats] = useState({ words: 0, characters: 0 })
 
     const editor = useEditor({
       immediatelyRender: false,
       extensions: [
-        StarterKit,
+        StarterKit.configure({
+          heading: {
+            levels: [1, 2, 3, 4, 5, 6],
+          },
+        }),
         Placeholder.configure({
-          placeholder: "Tell your story...",
+          placeholder: "Start writing your masterpiece… (use # for H1, ## for H2, - for lists)",
         }),
         Image.configure({
           inline: true,
@@ -36,56 +78,29 @@ const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         }),
       ],
       content,
+      onUpdate: ({ editor }) => {
+        const text = editor.getText()
+        const words = text.split(/\s+/).filter(word => word.length > 0).length
+        const characters = text.length
+        setStats({ words, characters })
+      },
       editorProps: {
         attributes: {
           class:
-            "prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] p-4",
-        },
-        handleDrop: (view, event, slice, moved) => {
-          if (
-            !moved &&
-            event.dataTransfer &&
-            event.dataTransfer.files &&
-            event.dataTransfer.files[0]
-          ) {
-            const file = event.dataTransfer.files[0]
-            if (file.type.startsWith("image/")) {
-              // Future: Upload to server here instead of Base64
-              // For now, consistent with requesting "Senior Level", we'd ideally upload.
-              // But as no upload endpoint exists yet, we'll use Base64 with a TODO or
-              // if I have time, implement upload.
-              // Sticking to Base64 for now as per MVP but adding validation.
-
-              if (file.size > 5 * 1024 * 1024) {
-                // 5MB limit
-                toast.error("Image too large. Max 5MB.")
-                return true
-              }
-
-              const reader = new FileReader()
-              reader.readAsDataURL(file)
-              reader.onload = () => {
-                const { schema } = view.state
-                const coordinates = view.posAtCoords({
-                  left: event.clientX,
-                  top: event.clientY,
-                })
-                if (coordinates) {
-                  const node = schema.nodes.image.create({ src: reader.result })
-                  const transaction = view.state.tr.insert(
-                    coordinates.pos,
-                    node,
-                  )
-                  view.dispatch(transaction)
-                }
-              }
-              return true
-            }
-          }
-          return false
+            "tiptap prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[420px] px-4 py-4 leading-relaxed",
         },
       },
     })
+
+    // Initial stats
+    useEffect(() => {
+      if (editor) {
+        const text = editor.getText()
+        const words = text.split(/\s+/).filter(word => word.length > 0).length
+        const characters = text.length
+        setStats({ words, characters })
+      }
+    }, [editor])
 
     useImperativeHandle(ref, () => ({
       getHTML: () => editor?.getHTML() || "",
@@ -93,7 +108,7 @@ const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
     }))
 
     const addImage = useCallback(() => {
-      const url = window.prompt("Enter Image URL")
+      const url = window.prompt("Enter image URL")
       if (url && editor) {
         editor.chain().focus().setImage({ src: url }).run()
       }
@@ -102,26 +117,15 @@ const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
     const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (!file) return
-
       if (!file.name.endsWith(".txt") && !file.name.endsWith(".md")) {
-        toast.error("Invalid file type. Only .txt and .md are supported.")
+        toast.error("Only .txt and .md files are supported.")
         return
       }
-
       setIsUploading(true)
       const reader = new FileReader()
       reader.onload = (event) => {
         const text = event.target?.result as string
         if (text && editor) {
-          // Insert text with preservation of paragraphs if needed,
-          // but insertContent usually handles markdown well if configured.
-          // Since we use StarterKit (which includes markdown support roughly),
-          // passing raw text might just be text.
-          // Tiptap's insertContent parses HTML/JSON, but for raw text it might need
-          // explicit markdown parsing if we want MD support.
-          // StarterKit doesn't auto-parse Markdown string to nodes without an extension or parser.
-          // However, for ".txt" it's just text. For ".md" we might want it parsed.
-          // Let's assume basic text insertion for now to be safe.
           editor.chain().focus().insertContent(text).run()
           toast.success("File imported successfully")
         }
@@ -132,38 +136,113 @@ const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         setIsUploading(false)
       }
       reader.readAsText(file)
-
-      // Reset input
       e.target.value = ""
     }
 
-    const toolbar = (
-      <div className="border-b bg-muted/40 p-2 flex gap-2 overflow-x-auto">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={addImage}
-          className="text-muted-foreground hover:text-foreground"
-          type="button"
-          disabled={!editor}
-        >
-          <ImageIcon className="w-4 h-4 mr-2" />
-          Add Image
-        </Button>
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground relative"
-            type="button"
-            disabled={isUploading || !editor}
-          >
-            {isUploading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FileText className="w-4 h-4 mr-2" />
-            )}
-            Import File
+    return (
+      <div className="rounded-2xl border border-border/60 overflow-hidden bg-card shadow-sm transition-all duration-300 focus-within:shadow-md focus-within:border-border">
+
+        {/* ── Toolbar ── */}
+        <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-border/50 bg-muted/30 overflow-x-auto">
+
+          {/* Undo / Redo */}
+          <ToolbarButton title="Undo" onClick={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()}>
+            <Undo className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Redo" onClick={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()}>
+            <Redo className="w-3.5 h-3.5" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Text Styles */}
+          <ToolbarButton title="Paragraph" active={editor?.isActive("paragraph")} onClick={() => editor?.chain().focus().setParagraph().run()}>
+            <Type className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Clear Formatting" onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}>
+            <Eraser className="w-3.5 h-3.5" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Headings */}
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5, 6].map((level) => (
+              <ToolbarButton
+                key={level}
+                title={`Heading ${level}`}
+                active={editor?.isActive("heading", { level: level as any })}
+                onClick={() => editor?.chain().focus().toggleHeading({ level: level as any }).run()}
+              >
+                <span className="text-[10px] font-bold">H{level}</span>
+              </ToolbarButton>
+            ))}
+          </div>
+
+          <ToolbarDivider />
+
+          {/* Text marks */}
+          <ToolbarButton title="Bold" active={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()}>
+            <Bold className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Italic" active={editor?.isActive("italic")} onClick={() => editor?.chain().focus().toggleItalic().run()}>
+            <Italic className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Strikethrough" active={editor?.isActive("strike")} onClick={() => editor?.chain().focus().toggleStrike().run()}>
+            <Strikethrough className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Inline code" active={editor?.isActive("code")} onClick={() => editor?.chain().focus().toggleCode().run()}>
+            <Code className="w-3.5 h-3.5" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Lists */}
+          <ToolbarButton title="Bullet list" active={editor?.isActive("bulletList")} onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+            <List className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Numbered list" active={editor?.isActive("orderedList")} onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
+            <ListOrdered className="w-3.5 h-3.5" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Block elements */}
+          <ToolbarButton title="Blockquote" active={editor?.isActive("blockquote")} onClick={() => editor?.chain().focus().toggleBlockquote().run()}>
+            <Quote className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Code block" active={editor?.isActive("codeBlock")} onClick={() => editor?.chain().focus().toggleCodeBlock().run()}>
+            <Code2 className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Horizontal rule" onClick={() => editor?.chain().focus().setHorizontalRule().run()}>
+            <Minus className="w-3.5 h-3.5" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Media */}
+          <ToolbarButton title="Add image by URL" onClick={addImage} disabled={!editor}>
+            <ImageIcon className="w-3.5 h-3.5" />
+          </ToolbarButton>
+
+          {/* File import */}
+          <div className="relative">
+            <button
+              type="button"
+              title="Import .txt or .md file"
+              disabled={isUploading || !editor}
+              className="
+                inline-flex items-center justify-center w-8 h-8 rounded-md text-sm
+                text-muted-foreground hover:text-foreground hover:bg-muted
+                transition-all duration-150 cursor-pointer
+                disabled:opacity-30 disabled:cursor-not-allowed
+              "
+            >
+              {isUploading
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <FileText className="w-3.5 h-3.5" />
+              }
+            </button>
             <Input
               type="file"
               accept=".txt,.md"
@@ -171,20 +250,26 @@ const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
               onChange={handleFileImport}
               disabled={isUploading || !editor}
             />
-          </Button>
-        </div>
-      </div>
-    )
+          </div>
 
-    return (
-      <div className="border rounded-md overflow-hidden bg-white dark:bg-zinc-950 focus-within:ring-2 ring-primary/20 transition-all">
-        {toolbar}
-        <div className="relative min-h-[300px]">
+          {/* Stats — right side */}
+          <div className="ml-auto flex items-center gap-3 pr-2 text-[10px] text-muted-foreground/50 tabular-nums whitespace-nowrap self-center hidden sm:flex">
+            <span>{stats.words} words</span>
+            <span className="w-1 h-1 rounded-full bg-border" />
+            <span>{stats.characters} chars</span>
+          </div>
+        </div>
+
+        {/* ── Editor area ── */}
+        <div className="relative min-h-[420px] bg-card">
           {editor ? (
             <EditorContent editor={editor} />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/5">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/50" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 text-muted-foreground/40">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span className="text-sm">Loading editor…</span>
+              </div>
             </div>
           )}
         </div>
