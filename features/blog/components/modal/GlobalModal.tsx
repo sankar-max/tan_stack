@@ -27,12 +27,14 @@ export function GlobalModal() {
 
 	return (
 		<Dialog open={isModalOpen} onOpenChange={closeModal}>
-			<DialogContent>
-				<DialogHeader className="border-b pb-3">
-					<DialogTitle>{modalTitle}</DialogTitle>
-					<DialogDescription>{modalDescription}</DialogDescription>
+			<DialogContent className="sm:max-w-2xl rounded-3xl p-0 overflow-hidden border border-border/50 shadow-2xl bg-background/95 backdrop-blur-xl">
+				<DialogHeader className="p-8 pb-6 border-b border-border/40">
+					<DialogTitle className="text-2xl font-black tracking-tight">{modalTitle}</DialogTitle>
+					<DialogDescription className="text-sm text-muted-foreground font-medium mt-1">
+            {modalDescription}
+          </DialogDescription>
 				</DialogHeader>
-				<div className="no-scrollbar -mx-4 max-h-[50vh] overflow-y-auto px-4">
+				<div className="no-scrollbar">
 					<ModalComponent {...modalProps} />
 				</div>
 			</DialogContent>

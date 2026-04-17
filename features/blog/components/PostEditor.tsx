@@ -53,7 +53,7 @@ function ToolbarButton({ onClick, active, disabled, title, children }: ToolbarBu
 }
 
 function ToolbarDivider() {
-  return <div className="w-px h-5 bg-border/60 mx-1 self-center flex-shrink-0" />
+  return <div className="w-px h-5 bg-border/60 mx-1 self-center shrink-0" />
 }
 
 const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(

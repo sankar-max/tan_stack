@@ -1,8 +1,11 @@
 import type { Metadata } from "next"
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import { QueryClient } from "@tanstack/react-query"
-import { BlogSection, postKeys, postService } from "@/features/blog"
+import { postKeys, postService } from "@/features/blog"
 import { siteConfig } from "@/lib/config"
+import dynamic from "next/dynamic"
+
+import BlogListView from "@/features/blog/components/BlogListView"
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -19,9 +22,7 @@ export const metadata: Metadata = {
     title: "Blog | Blog",
     description: "Explore stories, articles, and ideas from writers around the world on Blog.",
   },
-  
 }
-
 
 export const revalidate = 60 // Revalidate every 60 seconds
 
@@ -38,6 +39,7 @@ async function Blog() {
           cursor: pageParam as unknown as number,
         }),
       initialPageParam: undefined,
+      getNextPageParam: (lastPage: any) => lastPage.data.nextCursor ?? undefined,
     })
   } catch (error) {
     console.error("Failed to prefetch posts for blog home:", error)
@@ -45,7 +47,7 @@ async function Blog() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <BlogSection />
+      <BlogListView />
     </HydrationBoundary>
   )
 }

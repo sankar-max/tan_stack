@@ -8,8 +8,10 @@ import {
 import { postKeys } from "@/features/blog/utils/postKey"
 import { postService } from "@/features/blog/services"
 import { postServiceServer } from "@/features/blog/server"
-import BlogPostContent from "./BlogPostContent"
 import { siteConfig } from "@/lib/config"
+import dynamic from "next/dynamic"
+
+import BlogPostView from "@/features/blog/components/BlogPostView"
 
 export const revalidate = 3600 // Revalidate every hour
 
@@ -91,7 +93,6 @@ export async function generateStaticParams() {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { "blog-id": blogId } = await params
-  const post = await getPost(blogId) 
   const queryClient = new QueryClient()
 
   await queryClient.prefetchQuery({
@@ -99,13 +100,9 @@ export default async function PostPage({ params }: PostPageProps) {
     queryFn: () => postService.getPost(blogId),
   })
 
-
   return (
-    <>
-
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <BlogPostContent params={params} />
-      </HydrationBoundary>
-    </>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <BlogPostView params={params} />
+    </HydrationBoundary>
   )
 }

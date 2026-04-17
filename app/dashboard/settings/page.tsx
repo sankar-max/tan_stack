@@ -1,13 +1,11 @@
-import type { Metadata } from "next"
-import React from "react"
+import { Metadata } from "next";
+import { ProfileView } from "@/features/user/components/ProfileView";
 
 export const metadata: Metadata = {
-  title: "Account Settings",
-  description: "Manage your profile, preferences, and security settings.",
-}
+  title: "Settings",
+  description: "Manage your account settings and preferences.",
+};
 
-function SettingsPage() {
-  return <div>SettingsPage</div>
+export default function SettingsPage() {
+  return <ProfileView />;
 }
-
-export default SettingsPage

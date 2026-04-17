@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Sidebar,
@@ -9,29 +9,57 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { FileText, Home, Settings, PlusCircle, User } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+  useSidebar,
+} from "@/components/ui/sidebar";
+
+import {
+  FileText,
+  Home,
+  Settings,
+  User,
+  Sparkles,
+  LayoutDashboard,
+  PenTool,
+  Bookmark,
+  User2,
+  LogOut,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function DashboardSidebar({
   user,
 }: {
-  user?: { name?: string | null; image?: string | null; email?: string | null }
+  user?: { name?: string | null; image?: string | null; email?: string | null };
 }) {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
-  const items = [
+  const mainItems = [
     {
-      title: "Overview",
-      url: "/dashboard",
+      title: "Home",
+      url: "/blog",
       icon: Home,
+    },
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
     },
     {
       title: "My Stories",
       url: "/dashboard/posts",
       icon: FileText,
     },
+    {
+      title: "Bookmarks",
+      url: "/dashboard/bookmarks",
+      icon: Bookmark,
+    },
+  ];
+
+  const secondaryItems = [
     {
       title: "Profile",
       url: "/dashboard/user",
@@ -42,58 +70,151 @@ export function DashboardSidebar({
       url: "/dashboard/settings",
       icon: Settings,
     },
-  ]
+  ];
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="p-4 border-b">
-        <div className="flex items-center gap-2 font-semibold">
-          <span className="truncate">Story Platform</span>
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border/50 bg-background/50 backdrop-blur-xl"
+    >
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3 px-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <span className="font-bold text-sm tracking-tight">
+                Story Platform
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
+                Premium
+              </span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-2">
+
+      <SidebarContent className="px-3 py-4 gap-6">
+        {/* Action Section */}
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/dashboard/posts/new">
-              <SidebarMenuButton className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">
-                <PlusCircle className="mr-2" />
-                <span>Write Story</span>
+              <SidebarMenuButton
+                className={`
+                  h-11 rounded-xl transition-all duration-300
+                  ${
+                    isCollapsed
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-md hover:shadow-lg hover:shadow-primary/20"
+                  }
+                `}
+              >
+                <PenTool className={isCollapsed ? "h-5 w-5" : "h-4 w-4 mr-2"} />
+                {!isCollapsed && (
+                  <span className="font-semibold">Write Story</span>
+                )}
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={
-                  pathname === item.url || pathname.startsWith(item.url + "/")
-                }
-              >
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
         </SidebarMenu>
+
+        {/* Main Navigation */}
+        <div className="space-y-1">
+          {!isCollapsed && (
+            <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">
+              Navigation
+            </p>
+          )}
+          <SidebarMenu>
+            {mainItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={
+                    pathname === item.url || pathname.startsWith(item.url + "/")
+                  }
+                  className="h-10 rounded-xl px-4 hover:bg-accent/50 group"
+                >
+                  <Link href={item.url}>
+                    <item.icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="font-medium">{item.title}</span>
+                    {!isCollapsed && pathname === item.url && (
+                      <div className="ml-auto w-1 h-1 rounded-full bg-primary" />
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </div>
+
+        {/* Preferences */}
+        <div className="space-y-1">
+          {!isCollapsed && (
+            <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">
+              Account
+            </p>
+          )}
+          <SidebarMenu>
+            {secondaryItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.url}
+                  className="h-10 rounded-xl px-4 hover:bg-accent/50 group"
+                >
+                  <Link href={item.url}>
+                    <item.icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="font-medium">{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </div>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t">
+
+      <SidebarFooter className="p-4 border-t border-border/50 gap-4">
         {user && (
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {user.name?.[0] || "U"}
-            </div>
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-medium truncate">{user.name}</span>
-              <span className="text-xs text-muted-foreground truncate">
-                {user.email}
-              </span>
-            </div>
+          <div
+            className={`flex items-center gap-3 p-2 rounded-xl bg-muted/30 ${isCollapsed ? "justify-center" : ""}`}
+          >
+            <User2 className="h-8 w-8 ring-2 ring-primary/10" />
+            {!isCollapsed && (
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-sm font-bold truncate leading-none mb-1">
+                  {user.name}
+                </span>
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {user.email}
+                </span>
+              </div>
+            )}
           </div>
         )}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              className="h-10 rounded-xl px-4 hover:bg-destructive/10 hover:text-destructive group transition-all"
+              onClick={async () => {
+                const { authClient } = await import("@/lib/auth-client");
+                await authClient.signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      window.location.href = "/sign-in";
+                    },
+                  },
+                });
+              }}
+            >
+              <LogOut className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+              {!isCollapsed && <span className="font-bold">Logout</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

@@ -1,23 +1,20 @@
 import type { Metadata } from "next"
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
-import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { PostList } from "@/features/blog"
 import {
   dehydrate,
-  HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query"
 import { postKeys } from "@/features/blog/utils/postKey"
 import { postService } from "@/features/blog/services"
+import dynamic from "next/dynamic"
+
+const MyPostsView = dynamic(() => import("@/features/blog/components/MyPostsView"))
 
 export const metadata: Metadata = {
   title: "My Stories",
   description: "Manage your blog posts and stories.",
 }
-
 
 export default async function PostsPage() {
   const session = await auth.api.getSession({
@@ -25,7 +22,11 @@ export default async function PostsPage() {
   })
 
   if (!session?.user) {
-    return <div>Unauthorized</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <h2 className="text-sm font-bold text-muted-foreground">Session expired. Please sign in again.</h2>
+      </div>
+    )
   }
 
   const queryClient = new QueryClient()
@@ -38,28 +39,14 @@ export default async function PostsPage() {
         cursor: pageParam as unknown as number,
       }),
     initialPageParam: undefined,
+    getNextPageParam: (lastPage: any) => lastPage.data.nextCursor ?? undefined,
   })
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Stories</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your blog posts and stories here.
-          </p>
-        </div>
-        <Link href="/dashboard/posts/new">
-          <Button className="gap-2">
-            <PlusCircle className="h-4 w-4" />
-            Write New Story
-          </Button>
-        </Link>
-      </div>
-
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <PostList userId={session.user.id} />
-      </HydrationBoundary>
-    </div>
+    <MyPostsView 
+      userId={session.user.id} 
+      user={session.user}
+      dehydratedState={dehydrate(queryClient)} 
+    />
   )
 }

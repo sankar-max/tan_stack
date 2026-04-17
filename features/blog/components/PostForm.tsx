@@ -1,14 +1,28 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import TipTapEditor, { TipTapEditorRef } from "./PostEditor"
 import type { PostState } from "../actions"
 import { useRef, useState } from "react"
-import { Loader2, Sparkles, Eye, EyeOff, BookOpen, Save, Send } from "lucide-react"
+import { 
+  Loader2, 
+  Sparkles, 
+  Eye, 
+  EyeOff, 
+  BookOpen, 
+  Save, 
+  Send,
+  ChevronLeft,
+  Settings2,
+  AlertCircle
+} from "lucide-react"
 import { Switch } from "@/components/ui/switch"
+import { toast } from "sonner"
+import Link from "next/link"
+import { Card } from "@/components/ui/card"
 
 interface PostFormProps {
   initialData?: {
@@ -34,6 +48,18 @@ export function PostForm({
   const [title, setTitle] = useState(initialData?.title || "")
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || "")
 
+  // Watch for errors and show toasts
+  useEffect(() => {
+    if (state.message && state.errors && Object.keys(state.errors).length > 0) {
+      toast.error(state.message, {
+        description: "Please check the highlighted fields and try again.",
+      })
+    } else if (state.message && !state.errors) {
+      // This might be a generic error from database
+      toast.error(state.message)
+    }
+  }, [state])
+
   const handleSubmit = (formData: FormData) => {
     const html = editorRef.current?.getHTML()
     if (html) {
@@ -46,214 +72,174 @@ export function PostForm({
   const isEditing = !!initialData
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* ── Sticky Top Bar ── */}
-      <div className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-          {/* Left: breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <BookOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {isEditing ? "Editing story" : "New story"}
-            </span>
-            {title && (
-              <>
-                <span className="hidden sm:inline text-border">·</span>
-                <span className="hidden sm:inline truncate max-w-[180px] text-foreground/70 font-medium">
-                  {title}
-                </span>
-              </>
-            )}
+    <div className="min-h-screen bg-background pb-20">
+      {/* ── Sticky Navigation Bar ── */}
+      <div className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 overflow-hidden">
+            <Link href="/dashboard/posts">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent h-9 w-9 flex-shrink-0">
+                <ChevronLeft size={18} />
+              </Button>
+            </Link>
+            <div className="h-4 w-px bg-border/50 hidden sm:block" />
+            <div className="flex items-center gap-2 text-sm font-medium truncate">
+              <span className="text-muted-foreground hidden md:inline">Stories</span>
+              <span className="text-muted-foreground/30 hidden md:inline">/</span>
+              <span className="truncate max-w-[120px] sm:max-w-[200px]">
+                {isEditing ? `Edit: ${title || "Untitled"}` : "Create New Story"}
+              </span>
+            </div>
           </div>
 
-          {/* Right: controls */}
-          <div className="flex items-center gap-3">
-            {/* Publish toggle */}
-            <button
-              type="button"
-              onClick={() => setPublished(!published)}
-              className={`
-                flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold
-                border transition-all duration-300 cursor-pointer select-none
-                ${published
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                  : "bg-muted border-border text-muted-foreground hover:text-foreground"
-                }
-              `}
-            >
-              {published ? (
-                <Eye className="w-3.5 h-3.5" />
-              ) : (
-                <EyeOff className="w-3.5 h-3.5" />
-              )}
-              {published ? "Public" : "Draft"}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Status Toggle (Desktop) */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
+                {published ? "Public" : "Draft"}
+              </span>
               <Switch
-                id="published"
                 checked={published}
                 onCheckedChange={setPublished}
-                className="scale-75 pointer-events-none ml-1"
+                className="data-[state=checked]:bg-emerald-500"
               />
-            </button>
+            </div>
 
-            {/* Submit button */}
+            {/* Submit Button */}
             <form action={handleSubmit}>
               <Button
                 type="submit"
                 disabled={isPending}
                 className={`
-                  relative overflow-hidden h-9 px-5 rounded-full text-sm font-semibold
-                  transition-all duration-300 shadow-lg hover:shadow-xl
-                  disabled:opacity-60
+                  h-10 px-6 rounded-full font-bold shadow-lg transition-all duration-300 active:scale-95
                   ${published
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-0"
-                    : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white border-0"
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+                    : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
                   }
                 `}
               >
-                <span className="flex items-center gap-2">
-                  {isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : published ? (
-                    <Send className="w-4 h-4" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {isPending
-                    ? "Saving…"
-                    : published
-                    ? (isEditing ? "Update & Publish" : "Publish Story")
-                    : (isEditing ? "Save Draft" : submitLabel)
-                  }
-                </span>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    {published ? <Send className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                    {published ? (isEditing ? "Update" : "Publish") : (isEditing ? "Save" : "Create")}
+                  </>
+                )}
               </Button>
             </form>
           </div>
         </div>
       </div>
 
-      {/* ── Main Content ── */}
-      <form action={handleSubmit} className="max-w-3xl mx-auto px-6 pt-12 pb-32 space-y-0">
-
-        {/* Status badge */}
-        <div className="flex items-center gap-2 mb-8">
-          <span className={`
-            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-            ${published
-              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-              : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-            }
-          `}>
-            <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${published ? "bg-emerald-500" : "bg-amber-500"}`} />
-            {published ? "Will be published" : "Draft"}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {isEditing ? "Editing existing story" : "Writing new story"}
-          </span>
+      {/* ── Main Editor Body ── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 space-y-12">
+        {/* Mobile Status Bar */}
+        <div className="flex sm:hidden items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+           <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${published ? "bg-emerald-500" : "bg-amber-500"} animate-pulse`} />
+              <span className="text-xs font-bold uppercase tracking-wider">{published ? "Public Mode" : "Draft Mode"}</span>
+           </div>
+           <Switch
+                checked={published}
+                onCheckedChange={setPublished}
+                className="data-[state=checked]:bg-emerald-500"
+            />
         </div>
 
-        {/* Title */}
-        <div className="group mb-4">
-          <Input
-            name="title"
-            placeholder="Your story title…"
-            className="
-              w-full text-4xl sm:text-5xl font-bold tracking-tight leading-tight
-              border-none shadow-none bg-transparent px-0 py-2 h-auto
-              focus-visible:ring-0 focus-visible:outline-none
-              placeholder:text-muted-foreground/30
-              text-foreground
-              resize-none
-            "
-            required
-            minLength={3}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <div className="flex items-center justify-between mt-1">
+        {/* Form Inputs */}
+        <div className="space-y-10">
+          {/* Title Area */}
+          <div className="space-y-4">
+            <Input
+              name="title"
+              placeholder="Enter a title that hooks your readers..."
+              className="
+                w-full text-3xl sm:text-5xl font-black tracking-tight leading-tight
+                border-none shadow-none bg-transparent px-0 py-0 h-auto
+                focus-visible:ring-0 focus-visible:outline-none
+                placeholder:text-muted-foreground/20
+                text-foreground
+              "
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
             {state.errors?.title && (
-              <p className="text-sm text-destructive">{state.errors.title}</p>
-            )}
-            <span className="ml-auto text-xs text-muted-foreground/50 tabular-nums">
-              {title.length} chars
-            </span>
-          </div>
-          <div className="h-px bg-gradient-to-r from-border via-border/30 to-transparent mt-2 group-focus-within:from-violet-400 group-focus-within:via-violet-200 transition-all duration-500" />
-        </div>
-
-        {/* Excerpt */}
-        <div className="group mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-muted-foreground/50" />
-            <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-              Short excerpt
-            </span>
-            <span className="text-xs text-muted-foreground/40">(optional · shown in previews)</span>
-          </div>
-          <Textarea
-            name="excerpt"
-            placeholder="Write a compelling summary that makes readers want to read more…"
-            className="
-              w-full resize-none border-none shadow-none bg-transparent px-0
-              text-base text-muted-foreground leading-relaxed
-              focus-visible:ring-0 focus-visible:outline-none
-              placeholder:text-muted-foreground/30
-              min-h-[72px]
-            "
-            maxLength={300}
-            value={excerpt}
-            onChange={(e) => setExcerpt(e.target.value)}
-          />
-          <div className="flex items-center justify-between mt-1">
-            {state.errors?.excerpt && (
-              <p className="text-sm text-destructive">{state.errors.excerpt}</p>
-            )}
-            <div className="ml-auto flex items-center gap-1">
-              <div
-                className="h-1 rounded-full bg-muted overflow-hidden w-16"
-                title={`${excerpt.length}/300 characters`}
-              >
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    excerpt.length > 250 ? "bg-amber-500" : "bg-violet-500"
-                  }`}
-                  style={{ width: `${(excerpt.length / 300) * 100}%` }}
-                />
+              <div className="flex items-center gap-2 text-destructive text-xs font-bold bg-destructive/5 px-3 py-1.5 rounded-lg w-fit">
+                <AlertCircle size={14} />
+                {state.errors.title[0]}
               </div>
-              <span className="text-xs text-muted-foreground/50 tabular-nums">
-                {excerpt.length}/300
-              </span>
+            )}
+          </div>
+
+          {/* Metadata Area */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-8 items-start">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em]">
+                <Sparkles size={12} className="text-primary" />
+                Story Excerpt
+              </div>
+              <Textarea
+                name="excerpt"
+                placeholder="A brief summary for social media and search engines..."
+                className="
+                  w-full resize-none border-none shadow-none bg-muted/20 px-4 py-3
+                  text-base text-muted-foreground leading-relaxed rounded-2xl
+                  focus-visible:ring-1 focus-visible:ring-primary/20
+                  placeholder:text-muted-foreground/30
+                  min-h-[100px]
+                "
+                maxLength={300}
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+              />
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] text-muted-foreground/40 font-medium italic">
+                   Shown in post previews and SEO metadata.
+                </span>
+                <span className={`text-[10px] font-bold tabular-nums ${excerpt.length > 250 ? "text-amber-500" : "text-muted-foreground/40"}`}>
+                  {excerpt.length}/300
+                </span>
+              </div>
+            </div>
+
+            <div className="hidden md:block space-y-4 pt-7">
+              <Card className="border-border/50 bg-background/50 shadow-sm overflow-hidden rounded-2xl">
+                 <div className="p-3 bg-muted/30 border-b border-border/50">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Visibility</span>
+                 </div>
+                 <div className="p-4 space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                       <div className="flex items-center gap-2">
+                          {published ? <Eye size={14} className="text-emerald-500" /> : <EyeOff size={14} className="text-muted-foreground" />}
+                          <span className="text-xs font-medium">{published ? "Public" : "Private"}</span>
+                       </div>
+                       <div className={`w-2 h-2 rounded-full ${published ? "bg-emerald-500" : "bg-amber-500"}`} />
+                    </div>
+                 </div>
+              </Card>
             </div>
           </div>
-          <div className="h-px bg-gradient-to-r from-border via-border/30 to-transparent mt-2 group-focus-within:from-violet-400 group-focus-within:via-violet-200 transition-all duration-500" />
         </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 my-8">
-          <div className="flex-1 h-px bg-border/50" />
-          <div className="flex gap-1">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-            ))}
-          </div>
-          <div className="flex-1 h-px bg-border/50" />
+        {/* Editor Wrapper */}
+        <div className="relative pt-4">
+           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+           <div className="py-8">
+              <TipTapEditor ref={editorRef} content={initialData?.content} />
+              {state.errors?.content && (
+                <div className="flex items-center gap-2 text-destructive text-xs font-bold bg-destructive/5 px-3 py-1.5 rounded-lg w-fit mt-4">
+                  <AlertCircle size={14} />
+                  {state.errors.content[0]}
+                </div>
+              )}
+           </div>
         </div>
-
-        {/* Rich Text Editor */}
-        <div className="min-h-[500px]">
-          <TipTapEditor ref={editorRef} content={initialData?.content} />
-          {state.errors?.content && (
-            <p className="text-sm text-destructive mt-2">{state.errors.content}</p>
-          )}
-        </div>
-
-        {/* Global error */}
-        {state.message && (
-          <div className="mt-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20">
-            <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
-            <p className="text-sm text-destructive font-medium">{state.message}</p>
-          </div>
-        )}
-      </form>
+      </div>
     </div>
   )
 }

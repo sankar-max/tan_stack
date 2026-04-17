@@ -1,66 +1,11 @@
-"use client"
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { signOut } from "@/lib/auth-client"
-// import { ThemeToggle } from "@/components/theme/theme-toggle"
-import { ThemeDropdown } from "@/components/theme/theme-dropdown"
-import { Loader2, LogOutIcon } from "lucide-react"
-import { useUserProfile, UserAvatar } from "@/features/user"
-import { useRouter } from "next/navigation"
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { DashboardView } from "@/features/dashboard";
 
-export default function Dashboard() {
-  const router = useRouter()
-  const { user, isPending } = useUserProfile()
+export default async function DashboardPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  useEffect(() => {
-    if (!isPending && !user) {
-      void signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push("/sign-in")
-          },
-        },
-      })
-    }
-  }, [isPending, user, router])
-
-  if (isPending)
-    return (
-      <div className="grid place-items-center h-screen">
-        <Loader2 className="animate-spin" size={29} />
-      </div>
-    )
-
-  if (!user) return null
-
-  const logout = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/sign-in")
-        },
-      },
-    })
-  }
-  return (
-    <div className="p-8 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          Welcome, <UserAvatar /> {user?.name}!
-        </h1>
-        <div className="flex items-center gap-2">
-          {/* <ThemeToggle /> */}
-          <ThemeDropdown />
-          <Button variant="outline" onClick={logout}>
-            <LogOutIcon />
-            Sign Out
-          </Button>
-        </div>
-      </div>
-      <p className="text-muted-foreground">
-        This is your dashboard. You can toggle the theme using the switchers
-        above.
-      </p>
-    </div>
-  )
+  return <DashboardView user={session?.user} />;
 }

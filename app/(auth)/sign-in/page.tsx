@@ -1,5 +1,8 @@
 import type { Metadata } from "next"
-import { AuthCard, SignInForm } from "@/features/auth"
+import { AuthCard } from "@/features/auth"
+import dynamic from "next/dynamic"
+
+const SignInForm = dynamic(() => import("@/features/auth").then(mod => mod.SignInForm))
 
 export const metadata: Metadata = {
   title: "Sign In",
