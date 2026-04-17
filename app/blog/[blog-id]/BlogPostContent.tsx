@@ -17,8 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useToggleLike } from "@/features/blog";
-import { usePost } from "@/features/blog/hooks";
+import { useToggleLike, usePost } from "@/features/blog/hooks";
 import type { PostPageProps } from "./page";
 
 const fadeInUp: Variants = {

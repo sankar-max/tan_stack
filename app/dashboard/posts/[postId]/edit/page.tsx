@@ -1,9 +1,16 @@
+import type { Metadata } from "next"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { postService } from "@/features/blog"
+import { postService } from "@/features/blog/services"
 import { PostForm } from "@/features/blog"
 import { updatePost } from "@/features/blog/server"
+
+export const metadata: Metadata = {
+  title: "Edit Story",
+  description: "Edit and update your blog post on Blog.",
+}
+
 
 interface EditPostPageProps {
   params: Promise<{ postId: string }>

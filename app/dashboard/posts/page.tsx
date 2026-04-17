@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import Link from "next/link"
@@ -9,7 +10,14 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query"
-import { postKeys, postService } from "@/features/blog"
+import { postKeys } from "@/features/blog/utils/postKey"
+import { postService } from "@/features/blog/services"
+
+export const metadata: Metadata = {
+  title: "My Stories",
+  description: "Manage your blog posts and stories.",
+}
+
 
 export default async function PostsPage() {
   const session = await auth.api.getSession({

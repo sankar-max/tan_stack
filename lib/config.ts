@@ -1,12 +1,28 @@
 import { env } from "./env";
 import { getBaseUrl } from "./utils";
+const baseUrl = env.NEXT_PUBLIC_BASE_URL || getBaseUrl();
 
 export const siteConfig = {
-  name: "TanStack Auth",
-  description: "A secure and scalable authentication system built with Better Auth and Drizzle.",
-  url: env.NEXT_PUBLIC_BASE_URL || getBaseUrl(),
+  name: "Blog",
+  description:
+    "A modern blogging platform for writers and thinkers. Discover stories, share ideas, and connect with readers around the world.",
+  url: baseUrl,
+  ogImage: "/blog-meta-icon.png",
+  keywords: [
+    "blog",
+    "writing",
+    "stories",
+    "articles",
+    "publishing",
+    "nextjs",
+  ],
+  author: {
+    name: "Blog Team",
+    url: baseUrl,
+  },
+  twitter: "@Blogapp",
   links: {
-    github: "https://github.com/your-username/tanstack-auth", // Update with your actual repo
+    github: "https://github.com/sankar-max",
   },
 } as const;
 

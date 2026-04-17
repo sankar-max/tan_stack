@@ -1,7 +1,8 @@
 "use client"
 
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { postService, postKeys } from "@/features/blog"
+import { postService } from "../services"
+import { postKeys } from "../utils/postKey"
 import {
   Card,
   CardContent,

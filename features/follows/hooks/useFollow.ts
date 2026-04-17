@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { followsService } from "./service/client-follows"
-import { postKeys } from "@/features/blog"
+import { postKeys } from "@/features/blog/utils/postKey"
 
 export function useFollow() {
   const queryClient = useQueryClient()

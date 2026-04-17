@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { AppSidebar } from "@/features/blog/components/AppSidebar"
 import {
   SidebarInset,
@@ -13,11 +14,14 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-
 import { GlobalModal } from "@/components/blog/GlobalModal"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/blog" },
+  openGraph: { type: "website" },
+}
 
 export default async function BlogLayout({
   children,

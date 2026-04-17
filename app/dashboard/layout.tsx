@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { DashboardSidebar } from "@/features/dashboard"
 import {
   SidebarInset,
@@ -15,6 +16,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function DashboardLayout({
   children,

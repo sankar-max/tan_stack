@@ -1,4 +1,4 @@
-import { postService } from "@/features/blog"
+import { postService } from "../services"
 import { useInfiniteQuery } from "@tanstack/react-query"
 
 export function usePostComments({ postId, limit = 10 }: { postId: number; limit?: number }) {

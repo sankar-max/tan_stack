@@ -42,3 +42,5 @@ next-env.d.ts
 
 # ts errors
 .ts-errors-indexed.txt
+
+pnpm-lock.yaml

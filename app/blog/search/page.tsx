@@ -1,11 +1,25 @@
-import { postService } from "@/features/blog"
+import type { Metadata } from "next"
+import { postService } from "@/features/blog/services"
 import { Grid } from "@/features/blog/components/BlogSection/Grid"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Search } from "lucide-react"
 import Link from "next/link"
 
-// Pattern: SSR (Server-Side Rendering)
-// This page is dynamic because it depends on searchParams
+type SearchPageProps = {
+  searchParams: Promise<{ q?: string }>
+}
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const { q: query } = await searchParams
+  return {
+    title: query ? `Search: "${query}"` : "Search",
+    description: query
+      ? `Search results for "${query}" on Blog. Find stories and articles matching your interest.`
+      : "Search for stories and articles on Blog.",
+    robots: { index: false, follow: false },
+  }
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
