@@ -44,10 +44,8 @@ interface BlogPostViewProps {
 
 export default function BlogPostView({ params }: BlogPostViewProps) {
   const { "blog-id": blogId } = use(params);
-  const { data: result, isLoading, error } = usePost(blogId);
+  const { data: post, isLoading, error } = usePost(blogId);
   const { mutate: toggleLike, isPending } = useToggleLike();
-
-  const post = result?.data;
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();

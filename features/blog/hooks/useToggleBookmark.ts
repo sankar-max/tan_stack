@@ -3,9 +3,8 @@ import {
 	useMutation,
 	useQueryClient,
 } from "@tanstack/react-query";
-import axios from "axios";
 import { toast } from "sonner";
-import { postService } from "../services";
+import { toggleBookmarkAction } from "../actions";
 import type { PostListItemsT, PostListResponse } from "../types";
 import { postKeys } from "../utils/postKey";
 
@@ -13,7 +12,13 @@ export const useToggleBookmark = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (postId: string | number) => postService.toggleBookmark(postId),
+		mutationFn: async (postId: string | number) => {
+			const response = await toggleBookmarkAction(Number(postId));
+			if (!response.success) {
+				throw new Error(response.message);
+			}
+			return response;
+		},
 		onMutate: async (postId) => {
 			const idStr = postId.toString();
 			const numericId = Number(postId);
@@ -69,7 +74,7 @@ export const useToggleBookmark = () => {
 			return { previousPostsPages, previousSinglePost, idStr };
 		},
 		onSuccess: (response) => {
-			if (response.bookmarked) {
+			if (response.data.bookmarked) {
 				toast.success("Added to library");
 			} else {
 				toast.info("Removed from library");
@@ -88,10 +93,7 @@ export const useToggleBookmark = () => {
 				);
 			}
 
-			const errorMessage =
-				axios.isAxiosError(err) && err.response?.data?.message
-					? err.response.data.message
-					: "Failed to update bookmark";
+			const errorMessage = err instanceof Error ? err.message : "Failed to update bookmark";
 			toast.error(errorMessage);
 		},
 		onSettled: (data, error, postId) => {

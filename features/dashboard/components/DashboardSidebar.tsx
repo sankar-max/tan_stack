@@ -25,6 +25,7 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
 
 export function DashboardSidebar({
@@ -180,7 +181,12 @@ export function DashboardSidebar({
           <div
             className={`flex items-center gap-3 p-2 rounded-xl bg-muted/30 ${isCollapsed ? "justify-center" : ""}`}
           >
-            <User2 className="h-8 w-8 ring-2 ring-primary/10" />
+            <Avatar className="h-8 w-8 rounded-lg border border-border/50">
+              <AvatarImage src={user.image ?? undefined} alt={user.name || "User"} />
+              <AvatarFallback className="rounded-lg bg-muted text-foreground font-semibold text-[10px]">
+                {user.name?.slice(0, 2).toUpperCase() || "US"}
+              </AvatarFallback>
+            </Avatar>
             {!isCollapsed && (
               <div className="flex flex-col overflow-hidden">
                 <span className="text-sm font-bold truncate leading-none mb-1">

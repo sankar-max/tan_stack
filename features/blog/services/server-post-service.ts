@@ -16,6 +16,8 @@ export const postServiceServer = {
         published: posts.published,
         createdAt: posts.createdAt,
         updatedAt: posts.updatedAt,
+        authorId: posts.authorId,
+        deletedAt: posts.deletedAt,
         author: {
           id: user.id,
           name: user.name,
@@ -170,6 +172,8 @@ export const postServiceServer = {
         published: posts.published,
         createdAt: posts.createdAt,
         updatedAt: posts.updatedAt,
+        authorId: posts.authorId,
+        deletedAt: posts.deletedAt,
         author: {
           id: user.id,
           name: user.name,
@@ -482,6 +486,8 @@ export const postServiceServer = {
           published: posts.published,
           createdAt: posts.createdAt,
           updatedAt: posts.updatedAt,
+          authorId: posts.authorId,
+          deletedAt: posts.deletedAt,
           author: {
             id: user.id,
             name: user.name,

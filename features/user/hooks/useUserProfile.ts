@@ -5,7 +5,7 @@ export function useUserProfile() {
   const { data: session, isPending } = useSession()
 
   const user = session?.user ? {
-    img: session.user.image,
+    image: session.user.image,
     name: session.user.name,
     email: session.user.email,
     id: session.user.id,

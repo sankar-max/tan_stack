@@ -6,8 +6,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query"
 import { postKeys } from "@/features/blog/utils/postKey"
-import { postService } from "@/features/blog/services"
-import { postServiceServer } from "@/features/blog/server"
+import { getPostAction, getPostsAction } from "@/features/blog/actions"
 import { siteConfig } from "@/lib/config"
 import dynamic from "next/dynamic"
 
@@ -20,8 +19,9 @@ export interface PostPageProps {
 }
 
 const getPost = cache(async (blogId: string) => {
-  const post = await postService.getPost(blogId)
-  return post?.data ?? null
+  const result = await getPostAction(blogId)
+  if (!result.success) return null
+  return result.data
 })
 
 export async function generateMetadata(
@@ -75,14 +75,12 @@ export async function generateMetadata(
 
 export async function generateStaticParams() {
   try {
-    const result = await postServiceServer.getPosts({
+    const result = await getPostsAction({
       limit: 100,
-      cursor: undefined,
-      sort: "createdAt",
-      order: "desc",
       published: true,
     })
-    return result.posts.map((post) => ({
+    if (!result.success) return []
+    return result.data.posts.map((post) => ({
       "blog-id": post.id.toString(),
     }))
   } catch (error) {
@@ -93,16 +91,56 @@ export async function generateStaticParams() {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { "blog-id": blogId } = await params
+  const post = await getPost(blogId)
   const queryClient = new QueryClient()
 
+  if (!post) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <h1 className="text-2xl font-bold">Post not found</h1>
+      </div>
+    )
+  }
+
   await queryClient.prefetchQuery({
-    queryKey: postKeys.bySlug(blogId),
-    queryFn: () => postService.getPost(blogId),
+    queryKey: ["post", blogId],
+    queryFn: () => getPostAction(blogId),
   })
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "image": [siteConfig.ogImage],
+    "datePublished": post.createdAt ? new Date(post.createdAt).toISOString() : "",
+    "dateModified": post.updatedAt ? new Date(post.updatedAt).toISOString() : "",
+    "author": [
+      {
+        "@type": "Person",
+        "name": post.author?.name || "Anonymous",
+        "url": `${siteConfig.url}/user/${post.author?.id}`,
+      },
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": siteConfig.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${siteConfig.url}/logo.png`,
+      },
+    },
+    "description": post.excerpt || "",
+  }
+
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <BlogPostView params={params} />
-    </HydrationBoundary>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <BlogPostView params={params} />
+      </HydrationBoundary>
+    </>
   )
 }

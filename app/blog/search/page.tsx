@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { postService } from "@/features/blog/services"
+import { getPostsAction } from "@/features/blog/actions"
 import dynamic from "next/dynamic"
 
 const BlogSearchView = dynamic(() => import("@/features/blog/components/BlogSearchView"))
@@ -30,12 +30,15 @@ export default async function SearchPage({
   let total = 0
 
   if (query) {
-    const result = await postService.getPosts({
+    const result = await getPostsAction({
       limit: 50,
       search: query,
+      published: true,
     })
-    posts = result?.data?.posts || []
-    total = result?.data?.total || 0
+    if (result.success) {
+      posts = result.data.posts || []
+      total = result.data.total || 0
+    }
   }
 
   return (

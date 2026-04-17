@@ -1,7 +1,7 @@
 "use client"
 
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { postService } from "../services"
+import { getPostsAction } from "../actions"
 import { postKeys } from "../utils/postKey"
 import {
   DropdownMenu,
@@ -44,13 +44,21 @@ export function PostList({ userId }: PostListProps) {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: postKeys.myPosts(userId),
-    queryFn: ({ pageParam }) =>
-      postService.getPosts({ authorId: userId, cursor: pageParam }),
+    queryFn: async ({ pageParam }) => {
+      const result = await getPostsAction({
+        authorId: userId,
+        cursor: pageParam as number,
+        limit: 10,
+        published: undefined,
+      })
+      if (!result.success) throw new Error(result.message)
+      return result.data
+    },
     initialPageParam: undefined as number | undefined,
-    getNextPageParam: (lastPage) => lastPage.data.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   })
 
-  const posts = data?.pages.flatMap((page) => page.data.posts) || []
+  const posts = data?.pages.flatMap((page) => page.posts) || []
 
   if (isLoading) {
     return (

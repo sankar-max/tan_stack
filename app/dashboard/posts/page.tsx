@@ -6,7 +6,6 @@ import {
   QueryClient,
 } from "@tanstack/react-query"
 import { postKeys } from "@/features/blog/utils/postKey"
-import { postService } from "@/features/blog/services"
 import dynamic from "next/dynamic"
 
 const MyPostsView = dynamic(() => import("@/features/blog/components/MyPostsView"))
@@ -15,6 +14,8 @@ export const metadata: Metadata = {
   title: "My Stories",
   description: "Manage your blog posts and stories.",
 }
+
+import { getPostsAction } from "@/features/blog/actions"
 
 export default async function PostsPage() {
   const session = await auth.api.getSession({
@@ -33,13 +34,16 @@ export default async function PostsPage() {
 
   await queryClient.prefetchInfiniteQuery({
     queryKey: postKeys.myPosts(session.user.id),
-    queryFn: ({ pageParam }) =>
-      postService.getPosts({
+    queryFn: async ({ pageParam }) => {
+      const result = await getPostsAction({
         authorId: session.user.id,
-        cursor: pageParam as unknown as number,
-      }),
-    initialPageParam: undefined,
-    getNextPageParam: (lastPage: any) => lastPage.data.nextCursor ?? undefined,
+        cursor: pageParam as number,
+        limit: 10,
+      })
+      if (!result.success) throw new Error(result.message)
+      return result.data
+    },
+    initialPageParam: undefined as number | undefined,
   })
 
   return (

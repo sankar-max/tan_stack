@@ -47,11 +47,11 @@ export function DashboardHero({ user }: DashboardHeroProps) {
         <div className="hidden lg:block relative">
           <div className="absolute -inset-10 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
           <div className="relative h-56 w-56 flex items-center justify-center rounded-full bg-white/5 border border-white/10 backdrop-blur-2xl shadow-2xl overflow-hidden group">
-            {user?.img ? (
+            {user?.image ? (
               <Image
                 fill
-                className="h-32 w-32 text-zinc-700 bg-center object-cover bg-cover transition-transform duration-700 group-hover:scale-110"
-                src={user.img}
+                className=" text-zinc-700 bg-center object-cover bg-cover transition-transform duration-700 group-hover:scale-110"
+                src={user.image}
                 alt="profile"
               />
             ) : (

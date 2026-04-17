@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { usePostComments } from "../../hooks/usePostComments";
-import { postService } from "../../services";
+import { createCommentAction } from "../../actions";
 import { InfiniteScrollTrigger } from "../InfiniteScrollTrigger";
 
 type Props = {
@@ -38,8 +38,11 @@ function CommentView({ postId }: Props) {
   } = usePostComments({ postId: postId! });
 
   const { mutate: createComment, isPending: isCreating } = useMutation({
-    mutationFn: (newComment: string) =>
-      postService.createComment(postId!, newComment),
+    mutationFn: async (newComment: string) => {
+      const response = await createCommentAction(postId!, newComment);
+      if (!response.success) throw new Error(response.message);
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
       setContent("");

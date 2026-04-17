@@ -33,7 +33,7 @@ export function ProfileView() {
         <div className="flex items-center gap-6">
           <div className="relative group">
             <Avatar className="h-24 w-24 md:h-32 md:w-32 ring-4 ring-primary/10 shadow-2xl">
-              <AvatarImage src={user.img ?? undefined} />
+              <AvatarImage src={user.image ?? undefined} />
               <AvatarFallback className="bg-primary/5 text-primary text-2xl font-black">
                 {user.name?.[0]}
               </AvatarFallback>

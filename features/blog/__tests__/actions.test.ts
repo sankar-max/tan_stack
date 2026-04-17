@@ -6,11 +6,10 @@ import { auth } from "@/lib/auth";
 import {
 	createPost,
 	deletePost,
-	getPublicPosts,
-	searchPosts,
+	getPostsAction,
 	updatePost,
 } from "../actions";
-import { postService } from "../services";
+import { postServiceServer } from "../server";
 import type { PostListItemsT } from "../types";
 
 // --- Mocks for Next.js ---
@@ -71,11 +70,12 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 // --- Service Mock ---
-vi.mock("../services", () => ({
-	postService: {
+vi.mock("../server", () => ({
+	postServiceServer: {
 		createPost: vi.fn(),
 		updatePost: vi.fn(),
 		deletePost: vi.fn(),
+		getPosts: vi.fn(),
 	},
 }));
 
@@ -123,6 +123,7 @@ const MOCK_POST: PostListItemsT = {
 	totalComments: 0,
 	isLiked: false,
 	isFollowing: false,
+	isBookmarked: false,
 };
 
 // Data matching the specific selection in getPublicPosts/searchPosts
@@ -153,12 +154,7 @@ describe("Blog Server Actions", () => {
 				>,
 			);
 
-			vi.mocked(postService.createPost).mockResolvedValue({
-				success: true,
-				status: 201,
-				message: "Post created successfully",
-				data: MOCK_POST,
-			});
+			vi.mocked(postServiceServer.createPost).mockResolvedValue(MOCK_POST as any);
 
 			const formData = new FormData();
 			formData.append("title", "Mastering Vitest");
@@ -172,35 +168,31 @@ describe("Blog Server Actions", () => {
 		});
 	});
 
-	describe("getPublicPosts", () => {
+	describe("getPostsAction", () => {
 		it("returns success response", async () => {
-			// Returning the correct flat structure for public methods
-			vi.mocked(db.select).mockReturnValue(
-				createMockChain([MOCK_PUBLIC_POST]) as unknown as ReturnType<
-					typeof db.select
-				>,
-			);
+			vi.mocked(postServiceServer.getPosts).mockResolvedValue({
+				posts: [MOCK_POST],
+				nextCursor: null,
+				total: 1,
+			} as any);
 
-			const result = await getPublicPosts(1);
-			expect(result.status).toBe("success");
-		});
-	});
-
-	describe("searchPosts", () => {
-		it("returns empty for blank query", async () => {
-			const result = await searchPosts({ query: "" });
-			expect(result.data).toEqual([]);
+			const result = await getPostsAction({});
+			expect(result.success).toBe(true);
+			expect(result.data.posts).toHaveLength(1);
 		});
 
-		it("returns matching posts for valid query", async () => {
-			vi.mocked(db.select).mockReturnValue(
-				createMockChain([MOCK_PUBLIC_POST]) as unknown as ReturnType<
-					typeof db.select
-				>,
-			);
-			const result = await searchPosts({ query: "Vitest" });
-			expect(result.status).toBe("success");
-			expect(result.data).toHaveLength(1);
+		it("handles search query", async () => {
+			vi.mocked(postServiceServer.getPosts).mockResolvedValue({
+				posts: [MOCK_POST],
+				nextCursor: null,
+				total: 1,
+			} as any);
+
+			const result = await getPostsAction({ search: "Vitest" });
+			expect(result.success).toBe(true);
+			expect(postServiceServer.getPosts).toHaveBeenCalledWith(expect.objectContaining({
+				search: "Vitest"
+			}));
 		});
 	});
 
@@ -219,12 +211,7 @@ describe("Blog Server Actions", () => {
 				>,
 			);
 
-			vi.mocked(postService.updatePost).mockResolvedValue({
-				success: true,
-				status: 200,
-				message: "Post updated successfully",
-				data: MOCK_POST,
-			});
+			vi.mocked(postServiceServer.updatePost).mockResolvedValue(MOCK_POST as any);
 
 			const formData = new FormData();
 			formData.append("title", "Updated Title");
@@ -251,12 +238,7 @@ describe("Blog Server Actions", () => {
 				>,
 			);
 
-			vi.mocked(postService.deletePost).mockResolvedValue({
-				success: true,
-				status: 200,
-				message: "Post deleted successfully",
-				data: undefined as unknown as void,
-			});
+			vi.mocked(postServiceServer.deletePost).mockResolvedValue(undefined as any);
 
 			const result = await deletePost("1");
 

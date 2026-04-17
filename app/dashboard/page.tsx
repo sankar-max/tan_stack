@@ -7,5 +7,5 @@ export default async function DashboardPage() {
     headers: await headers(),
   });
 
-  return <DashboardView user={session?.user} />;
+  return <DashboardView user={session?.user as any} />;
 }

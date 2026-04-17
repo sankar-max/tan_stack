@@ -9,6 +9,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { postServiceServer } from "./server"
 import { CreatePostSchema } from "./services/schema"
+import { ApiSuccess, ApiFailure } from "@/lib/api/api-response"
 
 export type PostState = {
   errors?: {
@@ -20,107 +21,73 @@ export type PostState = {
   message?: string | null
 }
 
+/**
+ * Standardized response wrapper for Server Actions to match API structure
+ */
+function actionOk<T>(data: T, message = "Success", status = 200): ApiSuccess<T> {
+  return { success: true, data, message, status }
+}
 
-export async function getPublicPosts(limit = 12) {
-  try {
-    const data = await db
-      .select({
-        id: posts.id,
-        title: posts.title,
-        slug: posts.slug,
-        excerpt: posts.excerpt,
-        createdAt: posts.createdAt,
-        authorName: user.name,
-        authorImage: user.image,
-      })
-      .from(posts)
-      .leftJoin(user, eq(posts.authorId, user.id))
-      .where(eq(posts.published, true))
-      .orderBy(desc(posts.createdAt))
-      .limit(limit)
-
-    return {
-      status: "success",
-      message: data.length ? "Posts fetched successfully" : "No posts found",
-      data,
-    }
-  } catch (error) {
-    console.error("getPublicPosts error:", error)
-    return {
-      status: "error",
-      message: "Failed to fetch public posts",
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }
-  }
+function actionFail(message: string, status = 400, code = "BAD_REQUEST"): ApiFailure {
+  return { success: false, message, status, code }
 }
 
 // ───────────────────────────────────────────────
-// Search posts using simple partial match (ILIKE)
+// FETCHING ACTIONS
 // ───────────────────────────────────────────────
-export async function searchPosts({
-  query,
-  limit = 12,
-}: {
-  query: string
+
+export async function getPostsAction(params: {
+  search?: string
+  cursor?: number
   limit?: number
+  authorId?: string
+  published?: boolean
 }) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const currentUserId = session?.user?.id || null
+
   try {
-    if (!query?.trim()) {
-      return {
-        status: "success",
-        message: "No search query provided",
-        data: [],
-      }
-    }
-
-    // Public search does not require login
-    // await getCurrentUser();
-
-    const searchTerm = query.trim()
-
-    // Simple substring match for title or content
-    const data = await db
-      .select({
-        id: posts.id,
-        title: posts.title,
-        slug: posts.slug,
-        excerpt: posts.excerpt,
-        createdAt: posts.createdAt,
-        authorName: user.name,
-        authorImage: user.image,
-      })
-      .from(posts)
-      .leftJoin(user, eq(posts.authorId, user.id))
-      .where(
-        and(
-          eq(posts.published, true),
-          or(
-            ilike(posts.title, `%${searchTerm}%`),
-            ilike(posts.content, `%${searchTerm}%`),
-          ),
-        ),
-      )
-      .orderBy(desc(posts.createdAt))
-      .limit(limit)
-
-    return {
-      status: "success",
-      message: data.length
-        ? `Found ${data.length} matching posts`
-        : "No matching posts found",
-      data,
-    }
+    const result = await postServiceServer.getPosts({
+      ...params,
+      limit: params.limit ?? 12,
+      currentUserId,
+    })
+    return actionOk(result)
   } catch (error) {
-    console.error("searchPosts error:", error)
-    return {
-      status: "error",
-      message: "Search failed",
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }
+    console.error("getPostsAction error:", error)
+    return actionFail("Failed to fetch posts", 500, "INTERNAL_SERVER_ERROR")
   }
 }
+
+export async function getPostAction(id: string) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const currentUserId = session?.user?.id || null
+
+  try {
+    const postId = Number(id)
+    if (isNaN(postId)) return actionFail("Invalid post ID", 400, "INVALID_ID")
+
+    const post = await postServiceServer.getPost({
+      postId,
+      userId: currentUserId,
+    })
+
+    if (!post) return actionFail("Post not found", 404, "NOT_FOUND")
+
+    return actionOk(post)
+  } catch (error) {
+    console.error("getPostAction error:", error)
+    return actionFail("Failed to fetch post", 500, "INTERNAL_SERVER_ERROR")
+  }
+}
+
+// ───────────────────────────────────────────────
+// MUTATION ACTIONS
+// ───────────────────────────────────────────────
 
 export async function createPost(prevState: PostState, formData: FormData) {
   const session = await auth.api.getSession({
@@ -213,7 +180,7 @@ export async function updatePost(
   }
 
   revalidatePath("/dashboard/posts")
-  revalidatePath(`/blog/${postId}`) // In case slug didn't change, but content did
+  revalidatePath(`/blog/${postId}`)
   revalidatePath("/blog")
   redirect("/dashboard/posts")
 }
@@ -240,4 +207,96 @@ export async function deletePost(postId: string) {
   revalidatePath("/dashboard/posts")
   revalidatePath("/blog")
   return { message: "Post deleted successfully" }
+}
+
+export async function toggleLikeAction(postId: number) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) return actionFail("Unauthorized", 401, "UNAUTHORIZED")
+
+  try {
+    const result = await postServiceServer.toggleLike({
+      postId,
+      userId: session.user.id,
+    })
+    revalidatePath("/blog")
+    revalidatePath(`/blog/${postId}`)
+    return actionOk(result)
+  } catch (error) {
+    console.error("toggleLikeAction error:", error)
+    return actionFail("Failed to toggle like", 500)
+  }
+}
+
+export async function toggleBookmarkAction(postId: number) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) return actionFail("Unauthorized", 401, "UNAUTHORIZED")
+
+  try {
+    const result = await postServiceServer.toggleBookmark({
+      postId,
+      userId: session.user.id,
+    })
+    revalidatePath("/blog")
+    revalidatePath(`/blog/${postId}`)
+    revalidatePath("/dashboard/library")
+    return actionOk(result)
+  } catch (error) {
+    console.error("toggleBookmarkAction error:", error)
+    return actionFail("Failed to toggle bookmark", 500)
+  }
+}
+
+export async function getPostCommentsAction(postId: number, cursor?: number, limit = 10) {
+  try {
+    const result = await postServiceServer.getPostComments({
+      postId,
+      cursor,
+      limit,
+    })
+    return actionOk(result)
+  } catch (error) {
+    console.error("getPostCommentsAction error:", error)
+    return actionFail("Failed to fetch comments", 500)
+  }
+}
+
+export async function createCommentAction(postId: number, content: string) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) return actionFail("Unauthorized", 401, "UNAUTHORIZED")
+
+  try {
+    const result = await postServiceServer.createPostComment({
+      postId,
+      userId: session.user.id,
+      content,
+    })
+    revalidatePath(`/blog/${postId}`)
+    return actionOk(result)
+  } catch (error) {
+    console.error("createCommentAction error:", error)
+    return actionFail("Failed to create comment", 500)
+  }
+}
+
+export async function getPostLikesAction(postId: number, cursor?: string, limit = 10) {
+  try {
+    const result = await postServiceServer.getPostLikes({
+      postId,
+      cursor,
+      limit,
+    })
+    return actionOk(result)
+  } catch (error) {
+    console.error("getPostLikesAction error:", error)
+    return actionFail("Failed to fetch post likes", 500)
+  }
 }

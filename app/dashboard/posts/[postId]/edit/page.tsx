@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { postService } from "@/features/blog/services"
+import { postServiceServer } from "@/features/blog/server"
 import { PostForm } from "@/features/blog"
 import { updatePost } from "@/features/blog/server"
 
@@ -28,8 +28,10 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
 
   let post
   try {
-    const response = await postService.getPost(postId)
-    post = response.data
+    post = await postServiceServer.getPost({ 
+      postId: Number(postId), 
+      userId: session.user.id 
+    })
   } catch {
     return <div>Post not found or error loading post.</div>
   }

@@ -22,8 +22,8 @@ function LikeView({ postId }: Props) {
 		isFetchingNextPage,
 	} = usePostLikes({ postId });
 
-	const likes = infiniteLikes?.pages.flatMap((page) => page.data.users) || [];
-	const totalLikes = infiniteLikes?.pages[0]?.data.total || 0;
+	const likes = infiniteLikes?.pages.flatMap((page) => page.users) || [];
+	const totalLikes = infiniteLikes?.pages[0]?.total || 0;
 
 	if (likesLoading) {
 		return (

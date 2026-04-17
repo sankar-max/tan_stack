@@ -39,10 +39,8 @@ const stagger = {
 
 export default function BlogPostContent({ params }: PostPageProps) {
 	const { "blog-id": blogId } = use(params);
-	const { data: result, isLoading, error } = usePost(blogId);
+	const { data: post, isLoading, error } = usePost(blogId);
 	const { mutate: toggleLike, isPending } = useToggleLike();
-
-	const post = result?.data;
 
 	const handleLike = (e: React.MouseEvent) => {
 		e.preventDefault();

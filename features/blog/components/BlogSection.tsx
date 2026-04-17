@@ -25,8 +25,8 @@ function BlogSection() {
 
   const isSearching = debouncedQuery.length > 0
 
-  const posts = result?.pages.flatMap((page) => page.data.posts) || []
-  const totalPosts = result?.pages[0]?.data.total || 0
+  const posts = result?.pages.flatMap((page) => page.posts) || []
+  const totalPosts = result?.pages[0]?.total || 0
 
   return (
     <div className="space-y-16 pb-20">
@@ -41,7 +41,7 @@ function BlogSection() {
         isLoading={isLoading}
         error={error as Error | null}
         posts={posts}
-        status={result?.pages[0]?.status?.toString()}
+        status={result?.pages ? "success" : undefined}
         errorMessage={error instanceof Error ? error.message : undefined}
       />
       <InfiniteScrollTrigger

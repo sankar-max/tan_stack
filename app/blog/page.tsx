@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import { QueryClient } from "@tanstack/react-query"
-import { postKeys, postService } from "@/features/blog"
+import { postKeys } from "@/features/blog"
 import { siteConfig } from "@/lib/config"
 import dynamic from "next/dynamic"
 
@@ -26,29 +26,54 @@ export const metadata: Metadata = {
 
 export const revalidate = 60 // Revalidate every 60 seconds
 
+import { getPostsAction } from "@/features/blog/actions"
+
 async function Blog() {
   const queryClient = new QueryClient()
+  let posts: any[] = []
 
   try {
-    await queryClient.prefetchInfiniteQuery({
-      queryKey: [...postKeys.publicLatest(12), ""],
-      queryFn: ({ pageParam }) =>
-        postService.getPosts({
-          limit: 12,
-          search: "",
-          cursor: pageParam as unknown as number,
-        }),
-      initialPageParam: undefined,
-      getNextPageParam: (lastPage: any) => lastPage.data.nextCursor ?? undefined,
+    const result = await getPostsAction({
+      limit: 12,
+      search: "",
+      published: true,
     })
+    
+    if (result.success) {
+      posts = result.data.posts
+      await queryClient.prefetchInfiniteQuery({
+        queryKey: [...postKeys.publicLatest(12), ""],
+        queryFn: () => Promise.resolve(result.data),
+        initialPageParam: undefined as number | undefined,
+      })
+    }
   } catch (error) {
     console.error("Failed to prefetch posts for blog home:", error)
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": siteConfig.name,
+    "description": siteConfig.description,
+    "url": `${siteConfig.url}/blog`,
+    "blogPost": posts.map(post => ({
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "url": `${siteConfig.url}/blog/${post.id}`
+    }))
+  }
+
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <BlogListView />
-    </HydrationBoundary>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <BlogListView />
+      </HydrationBoundary>
+    </>
   )
 }
 
