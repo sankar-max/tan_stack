@@ -1,5 +1,5 @@
 import { db } from "@/db"
-import { comments, follows, postLikes, posts } from "@/db/schema/blog.schema"
+import { bookmarks, comments, follows, postLikes, posts } from "@/db/schema/blog.schema"
 import { user } from "@/db/schema/auth.schema"
 import { and, ilike, sql, desc, eq, lt } from "drizzle-orm"
 import z from "zod"
@@ -31,6 +31,13 @@ export const postServiceServer = {
           ),
         isFollowing: currentUserId
           ? sql<boolean>`EXISTS (select 1 from ${follows} where ${follows.followerId} = ${currentUserId} and ${follows.followingId} = ${posts.authorId})`.mapWith(
+              Boolean,
+            )
+          : sql<boolean>`false`.mapWith(
+              (val) => val === true || val === "t" || val === 1,
+            ),
+        isBookmarked: currentUserId
+          ? sql<boolean>`EXISTS (select 1 from ${bookmarks} where ${bookmarks.postId} = ${posts.id} and ${bookmarks.userId} = ${currentUserId})`.mapWith(
               Boolean,
             )
           : sql<boolean>`false`.mapWith(
@@ -112,6 +119,13 @@ export const postServiceServer = {
             : sql<boolean>`false`.mapWith(
                 (val) => val === true || val === "t" || val === 1,
               ),
+          isBookmarked: userId
+            ? sql<boolean>`EXISTS (select 1 from ${bookmarks} where ${bookmarks.postId} = ${posts.id} and ${bookmarks.userId} = ${userId})`.mapWith(
+                Boolean,
+              )
+            : sql<boolean>`false`.mapWith(
+                (val) => val === true || val === "t" || val === 1,
+              ),
         })
         .from(posts)
         .leftJoin(user, eq(posts.authorId, user.id))
@@ -178,6 +192,13 @@ export const postServiceServer = {
             ),
         isFollowing: userId
           ? sql<boolean>`EXISTS (select 1 from ${follows} where ${follows.followerId} = ${userId} and ${follows.followingId} = ${posts.authorId})`.mapWith(
+              Boolean,
+            )
+          : sql<boolean>`false`.mapWith(
+              (val) => val === true || val === "t" || val === 1,
+            ),
+        isBookmarked: userId
+          ? sql<boolean>`EXISTS (select 1 from ${bookmarks} where ${bookmarks.postId} = ${posts.id} and ${bookmarks.userId} = ${userId})`.mapWith(
               Boolean,
             )
           : sql<boolean>`false`.mapWith(
@@ -416,6 +437,94 @@ export const postServiceServer = {
       })
       .returning()
     return newComment
+  },
+
+  async toggleBookmark({ postId, userId }: { postId: number; userId: string }) {
+    const existing = await db
+      .select()
+      .from(bookmarks)
+      .where(and(eq(bookmarks.postId, postId), eq(bookmarks.userId, userId)))
+      .limit(1)
+
+    if (existing.length > 0) {
+      await db
+        .delete(bookmarks)
+        .where(and(eq(bookmarks.postId, postId), eq(bookmarks.userId, userId)))
+      return { bookmarked: false }
+    }
+
+    await db.insert(bookmarks).values({ postId, userId })
+    return { bookmarked: true }
+  },
+
+  async getBookmarkedPosts({
+    userId,
+    cursor,
+    limit,
+  }: {
+    userId: string
+    cursor?: number
+    limit: number
+  }) {
+    const where = and(
+      eq(bookmarks.userId, userId),
+      cursor ? lt(posts.id, cursor) : undefined,
+    )
+
+    const [data, totalResult] = await Promise.all([
+      db
+        .select({
+          id: posts.id,
+          title: posts.title,
+          slug: posts.slug,
+          excerpt: posts.excerpt,
+          content: posts.content,
+          published: posts.published,
+          createdAt: posts.createdAt,
+          updatedAt: posts.updatedAt,
+          author: {
+            id: user.id,
+            name: user.name,
+            image: user.image,
+          },
+          totalLikes:
+            sql<number>`(select count(*) from ${postLikes} where ${postLikes.postId} = ${posts.id})`.mapWith(
+              Number,
+            ),
+          totalComments:
+            sql<number>`(select count(*) from ${comments} where ${comments.postId} = ${posts.id})`.mapWith(
+              Number,
+            ),
+          isLiked: sql<boolean>`EXISTS (select 1 from ${postLikes} where ${postLikes.postId} = ${posts.id} and ${postLikes.userId} = ${userId})`.mapWith(
+            Boolean,
+          ),
+          isBookmarked: sql<boolean>`true`.mapWith(Boolean), // Since we are filtering by bookmarks
+        })
+        .from(bookmarks)
+        .innerJoin(posts, eq(bookmarks.postId, posts.id))
+        .leftJoin(user, eq(posts.authorId, user.id))
+        .where(where)
+        .limit(limit + 1)
+        .orderBy(desc(posts.id)),
+      db
+        .select({ total: sql<number>`count(*)` })
+        .from(bookmarks)
+        .where(eq(bookmarks.userId, userId)),
+    ])
+
+    const total = totalResult[0]?.total || 0
+    const hasNextPage = data.length > limit
+    const postsResult = hasNextPage ? data.slice(0, limit) : data
+    const nextCursor = hasNextPage
+      ? postsResult[postsResult.length - 1].id
+      : null
+
+    return {
+      posts: postsResult,
+      nextCursor,
+      total: Number(total),
+      limit,
+    }
   },
 }
 

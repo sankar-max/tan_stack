@@ -7,4 +7,5 @@ export const postKeys = {
   myPosts: (userId: string) => [...postKeys.all, "by-author", userId] as const,
   likes: (postId: number) => [...postKeys.all, "likes", postId] as const,
   comments: (postId: number) => [...postKeys.all, "comments", postId] as const,
+  bookmarks: (userId: string) => [...postKeys.all, "bookmarks", userId] as const,
 }

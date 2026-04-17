@@ -51,3 +51,9 @@ export const GetPostCommentsSchema = z.object({
 })
 
 export type GetPostCommentsQueryInput = z.infer<typeof GetPostCommentsSchema>
+
+export const BookmarkPostSchema = z.object({
+  postId: z.coerce.number().int().positive(),
+})
+
+export type BookmarkPostInput = z.infer<typeof BookmarkPostSchema>

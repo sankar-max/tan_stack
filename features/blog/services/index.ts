@@ -102,6 +102,20 @@ class PostService {
     )
     return res.data
   }
+
+  async toggleBookmark(postId: string | number) {
+    const res = await api.post<{ bookmarked: boolean }>(POST_API_CONSTANTS.BOOKMARK_POST, {
+      postId: postId.toString(),
+    })
+    return res.data
+  }
+
+  async getBookmarkedPosts(params?: { cursor?: number; limit?: number }) {
+    const res = await api.get<PostListResponse>(POST_API_CONSTANTS.GET_BOOKMARKED_POSTS, {
+      params,
+    })
+    return res.data
+  }
 }
 
 export const postService = new PostService()

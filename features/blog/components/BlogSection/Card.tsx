@@ -1,10 +1,11 @@
 "use client";
 import { format } from "date-fns";
-import { ArrowRight, Heart, MessageCircle } from "lucide-react";
+import { ArrowRight, Bookmark, Heart, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToggleLike } from "../../hooks/useToggleLike";
+import { useToggleBookmark } from "../../hooks/useToggleBookmark";
 import { useModalStore } from "@/features/blog/store/modal";
 import type { PostListItemsT } from "../../types";
 import { FollowButton } from "../FollowButton";
@@ -14,14 +15,22 @@ interface CardProps {
 }
 
 export function Card({ post }: CardProps) {
-  const { mutate: toggleLike, isPending } = useToggleLike();
+  const { mutate: toggleLike, isPending: likePending } = useToggleLike();
+  const { mutate: toggleBookmark, isPending: bookmarkPending } = useToggleBookmark();
   const { openModal } = useModalStore();
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isPending) return;
+    if (likePending) return;
     toggleLike(post.id);
+  };
+
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (bookmarkPending) return;
+    toggleBookmark(post.id);
   };
 
   return (
@@ -64,12 +73,12 @@ export function Card({ post }: CardProps) {
             <div className="flex items-center gap-4 mt-auto relative z-20">
               <button
                 onClick={handleLike}
-                disabled={isPending}
+                disabled={likePending}
                 className={`flex items-center gap-1.5 text-xs font-bold transition-all duration-300 hover:scale-110 ${
                   post.isLiked
                     ? "text-red-500"
                     : "text-muted-foreground hover:text-red-500"
-                } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${likePending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <Heart
                   className={`w-4 h-4 transition-all duration-300 ${
@@ -106,6 +115,22 @@ export function Card({ post }: CardProps) {
               >
                 <MessageCircle className="w-4 h-4" />
                 <span className="tabular-nums">{post.totalComments}</span>
+              </button>
+
+              <button
+                onClick={handleBookmark}
+                disabled={bookmarkPending}
+                className={`flex items-center gap-1.5 text-xs font-bold transition-all duration-300 hover:scale-110 ${
+                  post.isBookmarked
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
+                } ${bookmarkPending ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <Bookmark
+                  className={`w-4 h-4 transition-all duration-300 ${
+                    post.isBookmarked ? "fill-current" : ""
+                  }`}
+                />
               </button>
 
               <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:translate-x-0">

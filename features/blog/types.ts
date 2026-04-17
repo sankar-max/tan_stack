@@ -10,6 +10,7 @@ export type PostListItemsT = typeof posts.$inferSelect & {
   totalComments: number
   isLiked: boolean
   isFollowing: boolean
+  isBookmarked: boolean
 }
 export type PostListResponse = {
   posts: PostListItemsT[]
