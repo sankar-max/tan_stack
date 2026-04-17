@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { postService } from "./services"
+import { postServiceServer } from "./server"
 import { CreatePostSchema } from "./services/schema"
 
 export type PostState = {
@@ -20,9 +20,7 @@ export type PostState = {
   message?: string | null
 }
 
-// ───────────────────────────────────────────────
-// Get latest public posts (no auth required)
-// ───────────────────────────────────────────────
+
 export async function getPublicPosts(limit = 12) {
   try {
     const data = await db
@@ -152,18 +150,11 @@ export async function createPost(prevState: PostState, formData: FormData) {
   }
 
   try {
-    const reqHeaders = await headers()
-    await postService.createPost(
-      {
-        ...validatedData.data,
-        excerpt: validatedData.data.excerpt || undefined,
-      },
-      {
-        headers: {
-          Cookie: reqHeaders.get("cookie") || "",
-        },
-      },
-    )
+    await postServiceServer.createPost({
+      ...validatedData.data,
+      excerpt: validatedData.data.excerpt || undefined,
+      authorId: session.user.id,
+    })
   } catch (error) {
     console.error("Create Post Error:", error)
     return {
@@ -211,19 +202,10 @@ export async function updatePost(
   }
 
   try {
-    const reqHeaders = await headers()
-    await postService.updatePost(
-      postId,
-      {
-        ...validatedData.data,
-        excerpt: validatedData.data.excerpt || undefined,
-      },
-      {
-        headers: {
-          Cookie: reqHeaders.get("cookie") || "",
-        },
-      },
-    )
+    await postServiceServer.updatePost(postId, {
+      ...validatedData.data,
+      excerpt: validatedData.data.excerpt || undefined,
+    })
   } catch {
     return {
       message: "Database Error: Failed to Update Post.",
@@ -248,15 +230,7 @@ export async function deletePost(postId: string) {
   }
 
   try {
-    const reqHeaders = await headers()
-    // Ideally check if user is author before deleting
-    // service.deletePost handles API call, API should handle auth check
-    // user.id check in where clause of delete query in API
-    await postService.deletePost(postId, {
-      headers: {
-        Cookie: reqHeaders.get("cookie") || "",
-      },
-    })
+    await postServiceServer.deletePost(postId)
   } catch {
     return {
       message: "Database Error: Failed to Delete Post.",
